@@ -133,7 +133,7 @@ class IFFGuardianMCPServer:
             }
         ]
     
-    async def handle_client(self, websocket, path):
+    async def handle_client(self, websocket):
         """Handle MCP client WebSocket connection"""
         client_id = f"client_{int(time.time() * 1000)}"
         logger.info(f"New MCP client connected: {client_id}")

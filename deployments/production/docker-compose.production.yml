@@ -16,7 +16,7 @@
 services:
   # Vector database for threat pattern storage and semantic search
   qdrant:
-    image: qdrant/qdrant:1.11.0
+    image: qdrant/qdrant:latest
     container_name: claude-guardian-qdrant
     restart: unless-stopped
     environment:
@@ -24,9 +24,9 @@ services:
       QDRANT__STORAGE__OPTIMIZERS__DEFAULT_SEGMENT_NUMBER: 2
       QDRANT__SERVICE__MAX_REQUEST_SIZE_MB: 32
       QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS: 4
-    expose:
-      - "6333"     # HTTP API for vector operations
-      - "6334"     # gRPC for high-performance queries
+    ports:
+      - "127.0.0.1:6333:6333"     # HTTP API for vector operations
+      - "127.0.0.1:6334:6334"     # gRPC for high-performance queries
     volumes:
       - qdrant_data:/qdrant/storage
       - ./init/qdrant:/qdrant/init:ro
