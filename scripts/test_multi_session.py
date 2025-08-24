@@ -87,7 +87,8 @@ class MultiSessionTester:
         """Store a lesson learned from a specific session"""
         try:
             self.lesson_counter += 1
-            lesson_id = f"lesson_{self.lesson_counter}_{session_id}"
+            # Use integer ID for Qdrant compatibility
+            lesson_id = hash(f"lesson_{self.lesson_counter}_{session_id}_{datetime.now().isoformat()}") % 2147483647
             
             # Create vector embedding (simplified)
             text_content = f"{lesson_data.get('threat_type', '')} {lesson_data.get('description', '')} {lesson_data.get('mitigation', '')}"
@@ -105,7 +106,8 @@ class MultiSessionTester:
                     "mitigation": lesson_data.get('mitigation'),
                     "learned_at": datetime.now().isoformat(),
                     "source_session": session_id,
-                    "type": "lesson_learned"
+                    "type": "lesson_learned",
+                    "lesson_name": f"lesson_{self.lesson_counter}_{session_id}"
                 }
             }
             
