@@ -1,0 +1,509 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: claude-guardian-phase2
+  labels:
+    name: claude-guardian-phase2
+    app: claude-guardian
+    phase: "2"
+---
+# ConfigMap for Phase 2 configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: phase2-config
+  namespace: claude-guardian-phase2
+data:
+  ml_models_path: "/app/models"
+  correlation_threshold: "0.8"
+  alert_retention_days: "90"
+  notification_timeout: "30s"
+  escalation_delay: "15m"
+  dashboard_refresh_rate: "5s"
+  websocket_timeout: "300s"
+---
+# ML Threat Analyzer Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-threat-analyzer
+  namespace: claude-guardian-phase2
+  labels:
+    app: ml-threat-analyzer
+    tier: ml-analysis
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ml-threat-analyzer
+  template:
+    metadata:
+      labels:
+        app: ml-threat-analyzer
+        tier: ml-analysis
+    spec:
+      containers:
+      - name: ml-analyzer
+        image: claude-guardian/ml-threat-analyzer:latest
+        ports:
+        - containerPort: 8085
+        env:
+        - name: PORT
+          value: "8085"
+        - name: WEAVIATE_URL
+          value: "http://weaviate:8080"
+        - name: NEO4J_URL
+          value: "bolt://neo4j:7687"
+        - name: MODELS_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: phase2-config
+              key: ml_models_path
+        - name: WEAVIATE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: weaviate_api_key
+        - name: NEO4J_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: neo4j_password
+        volumeMounts:
+        - name: model-storage
+          mountPath: /app/models
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8085
+          initialDelaySeconds: 60
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8085
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: ml-models-pvc
+---
+# ML Threat Analyzer Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-threat-analyzer
+  namespace: claude-guardian-phase2
+spec:
+  selector:
+    app: ml-threat-analyzer
+  ports:
+  - port: 8085
+    targetPort: 8085
+---
+# Real-time Dashboard Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: real-time-dashboard
+  namespace: claude-guardian-phase2
+  labels:
+    app: real-time-dashboard
+    tier: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: real-time-dashboard
+  template:
+    metadata:
+      labels:
+        app: real-time-dashboard
+        tier: frontend
+    spec:
+      containers:
+      - name: dashboard
+        image: claude-guardian/real-time-dashboard:latest
+        ports:
+        - containerPort: 8086
+        env:
+        - name: PORT
+          value: "8086"
+        - name: AUTH_SERVICE_URL
+          value: "http://auth-service:8081"
+        - name: DETECTION_SERVICE_URL
+          value: "http://detection-engine:8082"
+        - name: ML_ANALYZER_URL
+          value: "http://ml-threat-analyzer:8085"
+        - name: ALERT_SERVICE_URL
+          value: "http://alert-system:8088"
+        - name: DASHBOARD_REFRESH_RATE
+          valueFrom:
+            configMapKeyRef:
+              name: phase2-config
+              key: dashboard_refresh_rate
+        - name: WEBSOCKET_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: phase2-config
+              key: websocket_timeout
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8086
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8086
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+---
+# Real-time Dashboard Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: real-time-dashboard
+  namespace: claude-guardian-phase2
+spec:
+  selector:
+    app: real-time-dashboard
+  ports:
+  - port: 8086
+    targetPort: 8086
+  type: LoadBalancer
+---
+# Attack Correlator Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: attack-correlator
+  namespace: claude-guardian-phase2
+  labels:
+    app: attack-correlator
+    tier: analysis
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: attack-correlator
+  template:
+    metadata:
+      labels:
+        app: attack-correlator
+        tier: analysis
+    spec:
+      containers:
+      - name: correlator
+        image: claude-guardian/attack-correlator:latest
+        ports:
+        - containerPort: 8087
+        env:
+        - name: PORT
+          value: "8087"
+        - name: NEO4J_URL
+          value: "bolt://neo4j:7687"
+        - name: NEO4J_USERNAME
+          value: "neo4j"
+        - name: NEO4J_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: neo4j_password
+        - name: CORRELATION_THRESHOLD
+          valueFrom:
+            configMapKeyRef:
+              name: phase2-config
+              key: correlation_threshold
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8087
+          initialDelaySeconds: 45
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8087
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+---
+# Attack Correlator Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: attack-correlator
+  namespace: claude-guardian-phase2
+spec:
+  selector:
+    app: attack-correlator
+  ports:
+  - port: 8087
+    targetPort: 8087
+---
+# Alert System Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-system
+  namespace: claude-guardian-phase2
+  labels:
+    app: alert-system
+    tier: alerting
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: alert-system
+  template:
+    metadata:
+      labels:
+        app: alert-system
+        tier: alerting
+    spec:
+      containers:
+      - name: alert-system
+        image: claude-guardian/alert-system:latest
+        ports:
+        - containerPort: 8088
+        env:
+        - name: PORT
+          value: "8088"
+        - name: DATABASE_URL
+          value: "postgres://iff_guardian:$(POSTGRESQL_PASSWORD)@postgresql:5432/iff_guardian?sslmode=disable"
+        - name: REDIS_URL
+          value: "redis://:$(REDIS_PASSWORD)@redis-master:6379/1"
+        - name: ALERT_RETENTION_DAYS
+          valueFrom:
+            configMapKeyRef:
+              name: phase2-config
+              key: alert_retention_days
+        - name: ESCALATION_DELAY
+          valueFrom:
+            configMapKeyRef:
+              name: phase2-config
+              key: escalation_delay
+        - name: POSTGRESQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: postgresql_password
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: redis_password
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: smtp_password
+        - name: SLACK_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: slack_webhook_url
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8088
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8088
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+# Alert System Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-system
+  namespace: claude-guardian-phase2
+spec:
+  selector:
+    app: alert-system
+  ports:
+  - port: 8088
+    targetPort: 8088
+---
+# Persistent Volume Claim for ML Models
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ml-models-pvc
+  namespace: claude-guardian-phase2
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: fast-ssd
+---
+# Horizontal Pod Autoscaler for Dashboard
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: dashboard-hpa
+  namespace: claude-guardian-phase2
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: real-time-dashboard
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+---
+# Horizontal Pod Autoscaler for ML Analyzer
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ml-analyzer-hpa
+  namespace: claude-guardian-phase2
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ml-threat-analyzer
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 85
+---
+# Service Monitor for Prometheus (if using Prometheus Operator)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: phase2-services-monitor
+  namespace: claude-guardian-phase2
+spec:
+  selector:
+    matchLabels:
+      app: ml-threat-analyzer
+  endpoints:
+  - port: web
+    path: /metrics
+---
+# Network Policy for Phase 2 Services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: phase2-network-policy
+  namespace: claude-guardian-phase2
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: claude-guardian
+    - namespaceSelector:
+        matchLabels:
+          name: claude-guardian-phase2
+    - podSelector: {}
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: claude-guardian
+    - namespaceSelector:
+        matchLabels:
+          name: claude-guardian-phase2
+    - podSelector: {}
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 443
+---
+# Ingress for Dashboard (optional)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: claude-guardian-dashboard
+  namespace: claude-guardian-phase2
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/websocket-services: "real-time-dashboard"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  tls:
+  - hosts:
+    - dashboard.claude-guardian.local
+    secretName: dashboard-tls-secret
+  rules:
+  - host: dashboard.claude-guardian.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: real-time-dashboard
+            port:
+              number: 8086

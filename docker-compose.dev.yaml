@@ -1,0 +1,298 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: iff-guardian-postgres-dev
+    environment:
+      POSTGRES_DB: iff_guardian_dev
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - iff-guardian-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user -d iff_guardian_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Test PostgreSQL Database
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: iff-guardian-postgres-test
+    environment:
+      POSTGRES_DB: test_iff_guardian
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    networks:
+      - iff-guardian-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d test_iff_guardian"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis Cache & Session Store
+  redis:
+    image: redis:7-alpine
+    container_name: iff-guardian-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - iff-guardian-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  # IFF-Guardian Application
+  app:
+    build:
+      context: .
+      dockerfile: deployments/docker/Dockerfile
+      args:
+        BUILD_ENV: development
+        VERSION: 1.0.0-dev
+      target: builder
+    container_name: iff-guardian-app-dev
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+asyncpg://dev_user:dev_password@postgres:5432/iff_guardian_dev
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - PYTHONPATH=/app/src
+    ports:
+      - "8000:8000"
+      - "5678:5678"  # debugpy port
+    volumes:
+      - ./src:/app/src:ro
+      - ./config:/app/config:ro
+      - ./tests:/app/tests:ro
+      - ./scripts:/app/scripts:ro
+      - dev_logs:/var/log/iff-guardian
+    networks:
+      - iff-guardian-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Waiting for dependencies...' &&
+        sleep 5 &&
+        echo 'Running database migrations...' &&
+        alembic upgrade head &&
+        echo 'Starting development server...' &&
+        uvicorn iff_guardian.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+      "
+
+  # Celery Worker
+  celery-worker:
+    build:
+      context: .
+      dockerfile: deployments/docker/Dockerfile
+      args:
+        BUILD_ENV: development
+        VERSION: 1.0.0-dev
+      target: builder
+    container_name: iff-guardian-celery-worker-dev
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+asyncpg://dev_user:dev_password@postgres:5432/iff_guardian_dev
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - PYTHONPATH=/app/src
+    volumes:
+      - ./src:/app/src:ro
+      - ./config:/app/config:ro
+      - dev_logs:/var/log/iff-guardian
+    networks:
+      - iff-guardian-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Starting Celery worker...' &&
+        celery -A iff_guardian.core.celery worker --loglevel=debug --concurrency=2
+      "
+
+  # Celery Beat (Scheduler)
+  celery-beat:
+    build:
+      context: .
+      dockerfile: deployments/docker/Dockerfile
+      args:
+        BUILD_ENV: development
+        VERSION: 1.0.0-dev
+      target: builder
+    container_name: iff-guardian-celery-beat-dev
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+asyncpg://dev_user:dev_password@postgres:5432/iff_guardian_dev
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - PYTHONPATH=/app/src
+    volumes:
+      - ./src:/app/src:ro
+      - ./config:/app/config:ro
+      - dev_logs:/var/log/iff-guardian
+    networks:
+      - iff-guardian-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Starting Celery beat...' &&
+        celery -A iff_guardian.core.celery beat --loglevel=debug
+      "
+
+  # Flower (Celery Monitoring)
+  flower:
+    build:
+      context: .
+      dockerfile: deployments/docker/Dockerfile
+      args:
+        BUILD_ENV: development
+        VERSION: 1.0.0-dev
+      target: builder
+    container_name: iff-guardian-flower-dev
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - FLOWER_BASIC_AUTH=dev:dev
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./src:/app/src:ro
+    networks:
+      - iff-guardian-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Starting Flower...' &&
+        celery -A iff_guardian.core.celery flower --port=5555 --basic_auth=dev:dev
+      "
+
+  # MailHog (Email Testing)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: iff-guardian-mailhog-dev
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - iff-guardian-network
+    restart: unless-stopped
+
+  # Adminer (Database Administration)
+  adminer:
+    image: adminer:latest
+    container_name: iff-guardian-adminer-dev
+    ports:
+      - "8080:8080"
+    networks:
+      - iff-guardian-network
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+
+  # Prometheus (Metrics Collection)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: iff-guardian-prometheus-dev
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - iff-guardian-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+
+  # Grafana (Metrics Visualization)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: iff-guardian-grafana-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/monitoring/grafana:/etc/grafana/provisioning:ro
+    networks:
+      - iff-guardian-network
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=dev
+      - GF_USERS_ALLOW_SIGN_UP=false
+
+networks:
+  iff-guardian-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  postgres_test_data:
+    driver: local
+  redis_data:
+    driver: local
+  dev_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local

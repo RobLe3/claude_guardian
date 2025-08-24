@@ -1,0 +1,198 @@
+{
+  "security_tools": [
+    {
+      "name": "security_scan_code",
+      "description": "Scans code for security vulnerabilities and dangerous patterns",
+      "category": "code_analysis",
+      "risk_level": "low",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The code to scan for security issues"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["python", "javascript", "go", "java", "c", "cpp"],
+            "description": "Programming language of the code"
+          },
+          "security_level": {
+            "type": "string",
+            "enum": ["strict", "moderate", "relaxed"],
+            "default": "moderate",
+            "description": "Security scanning level"
+          }
+        },
+        "required": ["code", "language"]
+      },
+      "permissions": ["code_analysis", "security_scan"],
+      "enabled": true
+    },
+    {
+      "name": "analyze_threat",
+      "description": "Analyzes potential security threats and calculates risk scores",
+      "category": "threat_analysis",
+      "risk_level": "low",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "description": "Type of security event to analyze"
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Path of file involved in the event"
+          },
+          "user_context": {
+            "type": "object",
+            "properties": {
+              "user_id": {"type": "string"},
+              "permission_level": {"type": "string"}
+            },
+            "description": "User context for the security event"
+          }
+        },
+        "required": ["event_type"]
+      },
+      "permissions": ["threat_analysis"],
+      "enabled": true
+    },
+    {
+      "name": "check_permissions",
+      "description": "Checks if a user has permission to access a resource or perform an action",
+      "category": "access_control",
+      "risk_level": "low",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "ID of the user requesting access"
+          },
+          "resource": {
+            "type": "string",
+            "description": "Resource the user wants to access"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["read", "write", "execute", "delete"],
+            "description": "Action the user wants to perform"
+          }
+        },
+        "required": ["user_id", "resource", "action"]
+      },
+      "permissions": ["access_control"],
+      "enabled": true
+    },
+    {
+      "name": "validate_input",
+      "description": "Validates user input for common security threats like injection attacks",
+      "category": "input_validation",
+      "risk_level": "low",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "input_data": {
+            "type": "string",
+            "description": "The input data to validate"
+          },
+          "input_type": {
+            "type": "string",
+            "enum": ["sql_parameter", "web_form", "command_line", "file_path"],
+            "description": "Type of input being validated"
+          },
+          "validation_rules": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["sql_injection", "xss", "command_injection", "path_traversal"]
+            },
+            "description": "Security validation rules to apply"
+          }
+        },
+        "required": ["input_data", "input_type"]
+      },
+      "permissions": ["input_validation"],
+      "enabled": true
+    },
+    {
+      "name": "monitor_execution",
+      "description": "Monitors code execution for suspicious behavior and security violations",
+      "category": "runtime_monitoring",
+      "risk_level": "medium",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "execution_id": {
+            "type": "string",
+            "description": "ID of the execution to monitor"
+          },
+          "monitoring_duration": {
+            "type": "integer",
+            "default": 30,
+            "description": "Duration in seconds to monitor execution"
+          },
+          "alert_threshold": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "default": "medium",
+            "description": "Threshold for generating alerts"
+          }
+        },
+        "required": ["execution_id"]
+      },
+      "permissions": ["runtime_monitoring", "execution_control"],
+      "enabled": true
+    }
+  ],
+  "security_resources": [
+    {
+      "uri": "iff://security/policies/default",
+      "name": "Default Security Policies",
+      "description": "Default security policies and configurations",
+      "mime_type": "application/json",
+      "permissions": ["policy_read"]
+    },
+    {
+      "uri": "iff://security/threat-intelligence/feeds",
+      "name": "Threat Intelligence Feeds",
+      "description": "Current threat intelligence data and indicators",
+      "mime_type": "application/json",
+      "permissions": ["threat_intel_read"]
+    },
+    {
+      "uri": "iff://security/audit-logs/recent",
+      "name": "Recent Security Events",
+      "description": "Recent security events and audit logs",
+      "mime_type": "application/json",
+      "permissions": ["audit_read"]
+    }
+  ],
+  "risk_thresholds": {
+    "low": {
+      "max_score": 30,
+      "auto_approve": true
+    },
+    "medium": {
+      "max_score": 70,
+      "require_approval": false
+    },
+    "high": {
+      "max_score": 90,
+      "require_approval": true,
+      "auto_block": false
+    },
+    "critical": {
+      "max_score": 100,
+      "auto_block": true
+    }
+  },
+  "default_permissions": [
+    "code_analysis",
+    "threat_analysis",
+    "access_control",
+    "input_validation"
+  ]
+}

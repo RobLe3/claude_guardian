@@ -1,0 +1,420 @@
+# IFF-Guardian GraphQL Schema
+# Provides unified API for security monitoring, threat detection, and system management
+
+scalar DateTime
+scalar JSON
+scalar UUID
+
+# Core Types
+
+type User {
+  id: UUID!
+  username: String!
+  email: String!
+  firstName: String
+  lastName: String
+  isActive: Boolean!
+  isVerified: Boolean!
+  mfaEnabled: Boolean!
+  roles: [Role!]!
+  lastLogin: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Role {
+  id: UUID!
+  name: String!
+  description: String
+  permissions: [Permission!]!
+  users: [User!]!
+  isSystem: Boolean!
+  createdAt: DateTime!
+}
+
+type Permission {
+  id: UUID!
+  name: String!
+  resource: String!
+  action: String!
+  description: String
+}
+
+# Security Types
+
+type ThreatIndicator {
+  id: UUID!
+  type: ThreatType!
+  severity: ThreatSeverity!
+  confidence: Float!
+  description: String!
+  source: String!
+  attributes: JSON!
+  firstSeen: DateTime!
+  lastSeen: DateTime!
+  status: ThreatStatus!
+  tags: [String!]!
+  relatedThreats: [ThreatIndicator!]!
+}
+
+enum ThreatType {
+  MALWARE
+  PHISHING
+  COMMAND_INJECTION
+  SQL_INJECTION
+  XSS
+  UNAUTHORIZED_ACCESS
+  PRIVILEGE_ESCALATION
+  DATA_EXFILTRATION
+  BEHAVIORAL_ANOMALY
+  PATTERN_MATCH
+  ML_DETECTION
+}
+
+enum ThreatSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ThreatStatus {
+  ACTIVE
+  INVESTIGATING
+  MITIGATED
+  RESOLVED
+  FALSE_POSITIVE
+}
+
+type SecurityEvent {
+  id: UUID!
+  eventType: String!
+  severity: ThreatSeverity!
+  userId: UUID
+  user: User
+  sourceIp: String
+  userAgent: String
+  details: JSON!
+  resolved: Boolean!
+  resolvedAt: DateTime
+  resolvedBy: User
+  createdAt: DateTime!
+}
+
+type ThreatAnalysis {
+  id: UUID!
+  inputData: JSON!
+  threatLevel: ThreatSeverity!
+  riskScore: Float!
+  confidence: Float!
+  reasons: [String!]!
+  recommendations: [String!]!
+  similarThreats: [SimilarThreat!]!
+  action: ThreatAction!
+  metadata: JSON!
+  analyzedAt: DateTime!
+}
+
+type SimilarThreat {
+  id: UUID!
+  similarity: Float!
+  pattern: String!
+  outcome: String!
+  description: String
+}
+
+enum ThreatAction {
+  ALLOW
+  BLOCK
+  WARN
+  QUARANTINE
+  MONITOR
+}
+
+# MCP Types
+
+type MCPTool {
+  name: String!
+  description: String!
+  inputSchema: JSON!
+  enabled: Boolean!
+  riskLevel: ThreatSeverity!
+  permissions: [String!]!
+  lastUsed: DateTime
+  usageCount: Int!
+}
+
+type MCPResource {
+  uri: String!
+  name: String!
+  description: String
+  mimeType: String
+  annotations: JSON
+  accessLevel: AccessLevel!
+}
+
+enum AccessLevel {
+  PUBLIC
+  PROTECTED
+  PRIVATE
+  RESTRICTED
+}
+
+type MCPExecution {
+  id: UUID!
+  toolName: String!
+  userId: UUID!
+  user: User!
+  parameters: JSON!
+  result: JSON
+  success: Boolean!
+  errorMessage: String
+  riskAssessment: ThreatAnalysis
+  duration: Int!
+  executedAt: DateTime!
+}
+
+# Analytics Types
+
+type SecurityMetrics {
+  totalThreats: Int!
+  activeThreats: Int!
+  resolvedThreats: Int!
+  falsePositives: Int!
+  threatsByType: [ThreatTypeCount!]!
+  threatsBySeverity: [ThreatSeverityCount!]!
+  detectionAccuracy: Float!
+  responseTime: Float!
+  timeRange: TimeRange!
+}
+
+type ThreatTypeCount {
+  type: ThreatType!
+  count: Int!
+}
+
+type ThreatSeverityCount {
+  severity: ThreatSeverity!
+  count: Int!
+}
+
+input TimeRange {
+  startTime: DateTime!
+  endTime: DateTime!
+}
+
+# Configuration Types
+
+type SystemConfig {
+  key: String!
+  value: JSON!
+  description: String
+  isSensitive: Boolean!
+  updatedAt: DateTime!
+  updatedBy: User
+}
+
+# Input Types
+
+input UserInput {
+  username: String!
+  email: String!
+  firstName: String
+  lastName: String
+  password: String!
+  roles: [UUID!]
+}
+
+input ThreatIndicatorInput {
+  type: ThreatType!
+  severity: ThreatSeverity!
+  description: String!
+  source: String!
+  attributes: JSON!
+  tags: [String!]
+}
+
+input ThreatAnalysisInput {
+  action: String!
+  context: JSON
+  userId: UUID!
+  toolName: String
+  parameters: JSON
+}
+
+input SecurityEventInput {
+  eventType: String!
+  severity: ThreatSeverity!
+  userId: UUID
+  sourceIp: String
+  userAgent: String
+  details: JSON!
+}
+
+input MCPToolInput {
+  name: String!
+  description: String!
+  inputSchema: JSON!
+  riskLevel: ThreatSeverity!
+  permissions: [String!]!
+}
+
+input SystemConfigInput {
+  key: String!
+  value: JSON!
+  description: String
+}
+
+# Query Root Type
+
+type Query {
+  # User Management
+  me: User
+  user(id: UUID!): User
+  users(limit: Int = 10, offset: Int = 0): [User!]!
+  
+  # Role & Permission Management
+  roles: [Role!]!
+  role(id: UUID!): Role
+  permissions: [Permission!]!
+  
+  # Threat Intelligence
+  threatIndicators(
+    types: [ThreatType!]
+    severities: [ThreatSeverity!]
+    statuses: [ThreatStatus!]
+    timeRange: TimeRange
+    limit: Int = 50
+    offset: Int = 0
+  ): [ThreatIndicator!]!
+  
+  threatIndicator(id: UUID!): ThreatIndicator
+  
+  # Security Events
+  securityEvents(
+    severities: [ThreatSeverity!]
+    resolved: Boolean
+    timeRange: TimeRange
+    limit: Int = 50
+    offset: Int = 0
+  ): [SecurityEvent!]!
+  
+  securityEvent(id: UUID!): SecurityEvent
+  
+  # Threat Analysis
+  threatAnalyses(
+    userId: UUID
+    timeRange: TimeRange
+    limit: Int = 50
+    offset: Int = 0
+  ): [ThreatAnalysis!]!
+  
+  threatAnalysis(id: UUID!): ThreatAnalysis
+  
+  # MCP Management
+  mcpTools: [MCPTool!]!
+  mcpTool(name: String!): MCPTool
+  mcpResources: [MCPResource!]!
+  mcpExecutions(
+    userId: UUID
+    toolName: String
+    timeRange: TimeRange
+    limit: Int = 50
+    offset: Int = 0
+  ): [MCPExecution!]!
+  
+  # Analytics & Metrics
+  securityMetrics(timeRange: TimeRange!): SecurityMetrics!
+  threatTrends(timeRange: TimeRange!, granularity: String! = "hour"): [JSON!]!
+  userActivity(userId: UUID, timeRange: TimeRange!): JSON!
+  
+  # System Configuration
+  systemConfig: [SystemConfig!]!
+  configValue(key: String!): SystemConfig
+  
+  # Search & Discovery
+  searchThreats(query: String!, limit: Int = 20): [ThreatIndicator!]!
+  findSimilarThreats(threatId: UUID!, threshold: Float = 0.8): [SimilarThreat!]!
+}
+
+# Mutation Root Type
+
+type Mutation {
+  # Authentication
+  login(username: String!, password: String!, mfaCode: String): AuthPayload!
+  refreshToken(refreshToken: String!): AuthPayload!
+  logout: Boolean!
+  
+  # User Management
+  createUser(input: UserInput!): User!
+  updateUser(id: UUID!, input: UserInput!): User!
+  deleteUser(id: UUID!): Boolean!
+  activateUser(id: UUID!): User!
+  deactivateUser(id: UUID!): User!
+  
+  # Role Management
+  assignRole(userId: UUID!, roleId: UUID!): User!
+  revokeRole(userId: UUID!, roleId: UUID!): User!
+  
+  # Threat Management
+  createThreatIndicator(input: ThreatIndicatorInput!): ThreatIndicator!
+  updateThreatIndicator(id: UUID!, input: ThreatIndicatorInput!): ThreatIndicator!
+  resolveThreatIndicator(id: UUID!, resolution: String!): ThreatIndicator!
+  
+  # Threat Analysis
+  analyzeThreat(input: ThreatAnalysisInput!): ThreatAnalysis!
+  learnFromFeedback(analysisId: UUID!, feedback: String!, correct: Boolean!): Boolean!
+  
+  # Security Events
+  createSecurityEvent(input: SecurityEventInput!): SecurityEvent!
+  resolveSecurityEvent(id: UUID!, resolution: String!): SecurityEvent!
+  
+  # MCP Management
+  registerMCPTool(input: MCPToolInput!): MCPTool!
+  updateMCPTool(name: String!, input: MCPToolInput!): MCPTool!
+  enableMCPTool(name: String!): MCPTool!
+  disableMCPTool(name: String!): MCPTool!
+  executeMCPTool(toolName: String!, parameters: JSON!): MCPExecution!
+  
+  # System Configuration
+  updateSystemConfig(input: SystemConfigInput!): SystemConfig!
+  deleteSystemConfig(key: String!): Boolean!
+}
+
+# Subscription Root Type
+
+type Subscription {
+  # Real-time threat monitoring
+  threatDetected(severities: [ThreatSeverity!]): ThreatIndicator!
+  securityEventCreated(severities: [ThreatSeverity!]): SecurityEvent!
+  
+  # User activity monitoring
+  userActivity(userId: UUID): JSON!
+  
+  # MCP execution monitoring
+  mcpExecutionStarted(userId: UUID): MCPExecution!
+  mcpExecutionCompleted(userId: UUID): MCPExecution!
+  
+  # System health monitoring
+  systemMetricsUpdated: JSON!
+  
+  # Real-time analytics
+  threatMetricsUpdated: SecurityMetrics!
+}
+
+# Authentication Payload
+
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+  user: User!
+  expiresAt: DateTime!
+}
+
+# Schema Directives
+
+directive @auth on FIELD_DEFINITION
+directive @hasRole(role: String!) on FIELD_DEFINITION
+directive @hasPermission(permission: String!) on FIELD_DEFINITION
+directive @rateLimit(max: Int!, window: Int!) on FIELD_DEFINITION
+directive @deprecated(reason: String) on FIELD_DEFINITION | ENUM_VALUE

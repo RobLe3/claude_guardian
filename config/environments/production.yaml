@@ -1,0 +1,193 @@
+# Production Environment Configuration
+
+app:
+  name: "IFF-Guardian"
+  environment: "production"
+  debug: false
+  reload: false
+  log_level: "WARNING"
+  version: "${APP_VERSION}"
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  timeout: 120
+  keep_alive: 10
+  max_requests: 1000
+  max_requests_jitter: 100
+
+database:
+  url: "${DATABASE_URL}"
+  pool_size: 20
+  max_overflow: 30
+  echo: false
+  echo_pool: false
+  ssl_require: true
+  connection_timeout: 30
+  pool_timeout: 60
+
+redis:
+  url: "${REDIS_URL}"
+  password: "${REDIS_PASSWORD}"
+  ssl: true
+  max_connections: 50
+  retry_on_timeout: true
+  socket_timeout: 30
+  socket_connect_timeout: 30
+
+security:
+  secret_key: "${SECRET_KEY}"
+  algorithm: "HS256"
+  access_token_expire_minutes: 15
+  refresh_token_expire_days: 7
+  password_requirements:
+    min_length: 12
+    require_uppercase: true
+    require_lowercase: true
+    require_digits: true
+    require_special_chars: true
+  session_timeout_minutes: 60
+  max_login_attempts: 5
+  lockout_duration_minutes: 30
+
+cors:
+  origins:
+    - "https://iff-guardian.com"
+    - "https://admin.iff-guardian.com"
+    - "https://api.iff-guardian.com"
+  credentials: true
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
+  headers: ["Authorization", "Content-Type", "X-Requested-With", "X-API-Key"]
+
+logging:
+  level: "WARNING"
+  format: "json"
+  handlers:
+    - type: "console"
+      level: "ERROR"
+    - type: "file"
+      level: "WARNING"
+      filename: "/var/log/iff-guardian/production.log"
+      max_bytes: 104857600  # 100MB
+      backup_count: 20
+    - type: "syslog"
+      level: "ERROR"
+      address: "${SYSLOG_ADDRESS}"
+
+monitoring:
+  enable_metrics: true
+  metrics_port: 9090
+  enable_tracing: true
+  enable_profiling: false
+  health_check_interval: 30
+  jaeger_endpoint: "${JAEGER_ENDPOINT}"
+  prometheus_gateway: "${PROMETHEUS_GATEWAY}"
+  alertmanager_url: "${ALERTMANAGER_URL}"
+
+features:
+  enable_registration: false  # Controlled registration in production
+  enable_password_reset: true
+  enable_email_verification: true
+  enable_2fa: true
+  enable_api_versioning: true
+  enable_debug_endpoints: false
+  enable_test_data_seeding: false
+  enable_admin_panel: true
+
+external_apis:
+  timeout: 60
+  retry_attempts: 5
+  retry_delay: 5
+  circuit_breaker_enabled: true
+  circuit_breaker_threshold: 10
+  circuit_breaker_timeout: 300
+
+file_upload:
+  max_size_mb: 100
+  allowed_types: ["pdf", "doc", "docx", "txt", "jpg", "png", "gif", "json", "xml", "csv", "zip"]
+  upload_path: "${UPLOAD_PATH}"
+  enable_virus_scan: true
+  s3_bucket: "${AWS_S3_BUCKET}"
+  cdn_url: "${CDN_URL}"
+
+rate_limiting:
+  per_minute: 30
+  burst: 5
+  enabled: true
+  redis_prefix: "rl:"
+  strategy: "sliding_window"
+
+celery:
+  broker_url: "${CELERY_BROKER_URL}"
+  result_backend: "${CELERY_RESULT_BACKEND}"
+  task_serializer: "json"
+  result_serializer: "json"
+  accept_content: ["json"]
+  timezone: "UTC"
+  enable_utc: true
+  worker_prefetch_multiplier: 8
+  task_acks_late: true
+  task_reject_on_worker_lost: true
+  task_routes:
+    "iff_guardian.tasks.heavy_computation": {"queue": "heavy"}
+    "iff_guardian.tasks.notifications": {"queue": "notifications"}
+    "iff_guardian.tasks.analysis": {"queue": "analysis"}
+    "iff_guardian.tasks.reports": {"queue": "reports"}
+  beat_schedule:
+    "cleanup-expired-tokens":
+      task: "iff_guardian.tasks.cleanup_expired_tokens"
+      schedule: 3600.0  # Every hour
+    "security-scan":
+      task: "iff_guardian.tasks.security_scan"
+      schedule: 86400.0  # Daily
+    "generate-reports":
+      task: "iff_guardian.tasks.generate_daily_reports"
+      schedule: "0 6 * * *"  # Daily at 6 AM
+
+email:
+  smtp_host: "${SMTP_HOST}"
+  smtp_port: "${SMTP_PORT}"
+  smtp_user: "${SMTP_USER}"
+  smtp_password: "${SMTP_PASSWORD}"
+  use_tls: true
+  use_ssl: false
+  from_email: "${FROM_EMAIL}"
+  rate_limit_per_hour: 1000
+
+aws:
+  region: "${AWS_DEFAULT_REGION}"
+  access_key_id: "${AWS_ACCESS_KEY_ID}"
+  secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+  s3_bucket: "${AWS_S3_BUCKET}"
+  cloudfront_distribution: "${CLOUDFRONT_DISTRIBUTION}"
+
+backup:
+  enabled: true
+  schedule: "0 1 * * *"  # Daily at 1 AM
+  retention_days: 90
+  s3_backup_bucket: "${BACKUP_S3_BUCKET}"
+  encryption_enabled: true
+  cross_region_replication: true
+
+notifications:
+  slack_webhook: "${SLACK_WEBHOOK_URL}"
+  pagerduty_key: "${PAGERDUTY_INTEGRATION_KEY}"
+  email_alerts: true
+  sms_alerts: true
+
+compliance:
+  data_retention_days: 2555  # 7 years
+  audit_logging: true
+  gdpr_compliance: true
+  hipaa_compliance: true
+  encryption_at_rest: true
+  encryption_in_transit: true
+
+performance:
+  connection_pool_size: 100
+  max_concurrent_requests: 1000
+  response_timeout: 30
+  cache_ttl: 3600
+  enable_compression: true
+  compression_level: 6

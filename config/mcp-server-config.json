@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "claude-guardian": {
+      "command": "go",
+      "args": ["run", "./services/mcp-service/main.go"],
+      "env": {
+        "CLAUDE_GUARDIAN_PORT": "8083",
+        "CLAUDE_GUARDIAN_ENV": "development",
+        "CLAUDE_GUARDIAN_LOG_LEVEL": "info"
+      }
+    }
+  }
+}

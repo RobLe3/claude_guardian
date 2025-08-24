@@ -1,0 +1,113 @@
+# Development Environment Configuration
+
+app:
+  name: "IFF-Guardian"
+  environment: "development"
+  debug: true
+  reload: true
+  log_level: "DEBUG"
+  version: "1.0.0-dev"
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+  timeout: 30
+  keep_alive: 2
+
+database:
+  url: "postgresql+asyncpg://dev_user:dev_password@localhost:5432/iff_guardian_dev"
+  pool_size: 5
+  max_overflow: 10
+  echo: true
+  echo_pool: false
+
+redis:
+  url: "redis://localhost:6379/0"
+  password: null
+  ssl: false
+  max_connections: 10
+  retry_on_timeout: true
+
+security:
+  secret_key: "dev-secret-key-not-for-production"
+  algorithm: "HS256"
+  access_token_expire_minutes: 30
+  refresh_token_expire_days: 30
+  password_requirements:
+    min_length: 6
+    require_uppercase: false
+    require_lowercase: true
+    require_digits: true
+    require_special_chars: false
+
+cors:
+  origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+    - "http://127.0.0.1:3000"
+    - "http://127.0.0.1:8080"
+  credentials: true
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
+  headers: ["*"]
+
+logging:
+  level: "DEBUG"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  handlers:
+    - type: "console"
+      level: "DEBUG"
+    - type: "file"
+      level: "INFO"
+      filename: "logs/development.log"
+      max_bytes: 10485760  # 10MB
+      backup_count: 5
+
+monitoring:
+  enable_metrics: true
+  metrics_port: 9090
+  enable_tracing: false
+  enable_profiling: true
+  health_check_interval: 30
+
+features:
+  enable_registration: true
+  enable_password_reset: true
+  enable_email_verification: false
+  enable_2fa: false
+  enable_api_versioning: true
+  enable_debug_endpoints: true
+  enable_test_data_seeding: true
+
+external_apis:
+  timeout: 30
+  retry_attempts: 3
+  retry_delay: 1
+
+file_upload:
+  max_size_mb: 10
+  allowed_types: ["pdf", "doc", "docx", "txt", "jpg", "png", "gif", "json", "xml"]
+  upload_path: "/tmp/uploads"
+  enable_virus_scan: false
+
+rate_limiting:
+  per_minute: 100
+  burst: 20
+  enabled: false
+
+celery:
+  broker_url: "redis://localhost:6379/1"
+  result_backend: "redis://localhost:6379/2"
+  task_serializer: "json"
+  result_serializer: "json"
+  accept_content: ["json"]
+  timezone: "UTC"
+  enable_utc: true
+  worker_prefetch_multiplier: 1
+  task_acks_late: true
+
+testing:
+  database_url: "postgresql+asyncpg://test:test@localhost:5432/test_iff_guardian"
+  redis_url: "redis://localhost:6379/15"
+  cleanup_after_tests: true
+  mock_external_apis: true

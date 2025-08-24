@@ -1,0 +1,107 @@
+# Claude Guardian - Git Ignore Configuration
+
+# Build artifacts and binaries
+*.exe
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+build/
+
+# Go build artifacts
+*.o
+*.a
+*.test
+*.prof
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.test
+*.local
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log
+logs/
+*.log.*
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vim/
+
+# Docker artifacts
+docker-compose.override.yml
+.docker/
+
+# Data directories (persistent volumes)
+data/
+storage/
+volumes/
+
+# Security sensitive files
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+private/
+
+# Vector database data
+qdrant_data/
+vector_storage/
+
+# PostgreSQL data
+postgres_data/
+pg_data/
+
+# Monitoring data
+prometheus_data/
+grafana_data/
+
+# Backup files
+*.bak
+*.backup
+backup/
+backups/
+EOF < /dev/null
