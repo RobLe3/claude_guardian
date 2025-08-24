@@ -1,6 +1,6 @@
 # Claude Guardian
 
-**Claude Guardian** (formerly IFF-Guardian) is a production-ready AI-powered security system designed to protect Claude Code and development environments from malicious coding techniques, resource hijacking, and repository damage through real-time threat detection, vector-graph correlation analysis, and intelligent security response.
+**Claude Guardian** is a production-ready AI-powered security system designed to protect Claude Code and development environments from malicious coding techniques, resource hijacking, and repository damage through real-time threat detection, vector-graph correlation analysis, and intelligent security response.
 
 ---
 
