@@ -1,7 +1,7 @@
 # Multi-stage Docker build for Claude Guardian
 
 # Build stage
-FROM python:3.11-slim as builder
+FROM python:3.13-slim as builder
 
 # Set build arguments
 ARG BUILD_ENV=production
@@ -42,7 +42,7 @@ COPY config/ ./config/
 RUN pip install -e .
 
 # Production stage
-FROM python:3.11-slim as production
+FROM python:3.13-slim as production
 
 # Set metadata labels
 LABEL maintainer="Claude Guardian Team <team@claude-guardian.com>" \
