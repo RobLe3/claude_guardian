@@ -139,16 +139,17 @@ python3 scripts/test_full_stack.py
                          │
         ┌────────────────┴────────────────┐
         │            Data Layer           │
-        │  Qdrant + PostgreSQL + Redis    │
+        │  Qdrant + PostgreSQL + LightRAG │
         └─────────────────────────────────┘
 ```
 
 ### **Core Components**
-- **MCP Service**: WebSocket server for Claude Code integration
-- **Detection Engine**: Real-time threat analysis with ML
-- **Vector Database**: Qdrant for semantic pattern matching
-- **Graph Analytics**: PostgreSQL with relationship analysis
-- **API Gateway**: Go-based high-performance routing
+- **MCP Service**: Python WebSocket server for Claude Code integration
+- **Detection Engine**: Real-time threat analysis with pattern correlation
+- **Vector Database**: Qdrant for semantic search and pattern storage
+- **LightRAG Integration**: Lightweight RAG for security information retrieval
+- **PostgreSQL**: Audit logs, policies, and structured threat data
+- **API Gateway**: Go-based microservices architecture
 
 ---
 
@@ -339,11 +340,12 @@ Copyright (c) 2025 Claude Guardian Team
 
 ## 🎉 **Acknowledgments**
 
-- **Vector Database**: Powered by Qdrant for semantic search
-- **Graph Analytics**: NetworkX for relationship analysis  
+- **Vector Database**: Powered by Qdrant for semantic search and pattern correlation
+- **LightRAG**: Lightweight RAG implementation for intelligent information retrieval
+- **Graph Analysis**: NetworkX for testing relationship analysis (development/testing only)
 - **Container Orchestration**: Docker for production deployment
-- **Protocol Integration**: MCP specification compliance
-- **Testing Framework**: Comprehensive validation suite
+- **Protocol Integration**: MCP 2024-11-05 specification compliance
+- **Testing Framework**: Comprehensive validation suite with 5 test modules
 
 ---
 
