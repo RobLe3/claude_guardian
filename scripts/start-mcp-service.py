@@ -295,11 +295,26 @@ class IFFGuardianMCPServer:
             }
     
     async def scan_code_security(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
-        """Scan code for security vulnerabilities"""
+        """Scan code for security vulnerabilities with enhanced context awareness"""
         code = arguments.get("code", "")
         language = arguments.get("language", "unknown")
         security_level = arguments.get("security_level", "moderate")
         
+        # Import enhanced scanner locally to avoid import issues
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+            from enhanced_security_scanner import EnhancedSecurityScanner
+            scanner = EnhancedSecurityScanner()
+            return scanner.enhanced_security_scan(code, language, security_level)
+        except ImportError:
+            # Fallback to basic scanning if enhanced scanner is not available
+            logger.warning("Enhanced security scanner not available, using basic scanner")
+            return await self.basic_scan_code_security(code, language, security_level)
+    
+    async def basic_scan_code_security(self, code: str, language: str, security_level: str) -> Dict[str, Any]:
+        """Basic security scan (fallback method)"""
         vulnerabilities = []
         risk_score = 0
         
