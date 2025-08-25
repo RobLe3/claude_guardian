@@ -31,9 +31,9 @@ services:
       - qdrant_data:/qdrant/storage
       - ./init/qdrant:/qdrant/init:ro
     healthcheck:
-      test: ["CMD", "wget", "-qO", "-", "http://localhost:6333/readyz"]
+      test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/localhost/6333' || exit 1"]
       interval: 10s
-      timeout: 3s
+      timeout: 5s
       retries: 15
       start_period: 30s
 

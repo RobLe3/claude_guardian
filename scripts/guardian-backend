@@ -1,0 +1,503 @@
+#!/usr/bin/env bash
+# Claude Guardian Backend Services Management Script
+# Provides individual service control similar to guardian-mcp
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+COMPOSE_DIR="$PROJECT_ROOT/deployments/production"
+COMPOSE_FILE="$COMPOSE_DIR/docker-compose.production.yml"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Available services
+SERVICES=("qdrant" "postgres" "claude-guardian-mcp" "init-service" "prometheus")
+DEFAULT_SERVICES=("qdrant" "postgres")
+
+usage() {
+    echo "Claude Guardian Backend Services Management"
+    echo "=========================================="
+    echo ""
+    echo "Usage: $0 {command} [service] [options]"
+    echo ""
+    echo "Commands:"
+    echo "  start [service]     - Start service(s) (default: core services)"
+    echo "  stop [service]      - Stop service(s)"
+    echo "  restart [service]   - Restart service(s)"
+    echo "  status [service]    - Show service status"
+    echo "  health [service]    - Detailed health diagnostics"
+    echo "  logs [service]      - Show service logs"
+    echo "  diagnose [service]  - Complete service diagnostics"
+    echo ""
+    echo "Services:"
+    echo "  qdrant             - Vector database"
+    echo "  postgres           - PostgreSQL database"
+    echo "  claude-guardian-mcp - MCP server container"
+    echo "  init-service       - Database initialization"
+    echo "  prometheus         - Monitoring (optional)"
+    echo "  all                - All services"
+    echo ""
+    echo "Examples:"
+    echo "  $0 start                    # Start core services (qdrant, postgres)"
+    echo "  $0 start qdrant             # Start only Qdrant"
+    echo "  $0 status all               # Status of all services"
+    echo "  $0 health qdrant            # Detailed Qdrant health check"
+    echo "  $0 diagnose postgres        # Complete PostgreSQL diagnostics"
+    echo ""
+    exit 1
+}
+
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+check_requirements() {
+    if ! command -v docker &> /dev/null; then
+        log_error "Docker not found. Please install Docker first."
+        exit 1
+    fi
+    
+    if ! docker compose version &> /dev/null; then
+        log_error "Docker Compose v2 not available. Please upgrade Docker."
+        exit 1
+    fi
+    
+    if [ ! -f "$COMPOSE_FILE" ]; then
+        log_error "Docker Compose file not found at $COMPOSE_FILE"
+        log_info "Please run from Claude Guardian repository root"
+        exit 1
+    fi
+}
+
+validate_service() {
+    local service="$1"
+    
+    if [[ "$service" == "all" ]]; then
+        return 0
+    fi
+    
+    if [[ ! " ${SERVICES[@]} " =~ " ${service} " ]]; then
+        log_error "Unknown service: $service"
+        log_info "Available services: ${SERVICES[*]}"
+        exit 1
+    fi
+}
+
+get_services() {
+    local input="$1"
+    
+    if [[ -z "$input" ]]; then
+        echo "${DEFAULT_SERVICES[@]}"
+    elif [[ "$input" == "all" ]]; then
+        echo "${SERVICES[@]}"
+    else
+        echo "$input"
+    fi
+}
+
+check_service_exists() {
+    local service="$1"
+    
+    if docker compose -f "$COMPOSE_FILE" ps --services | grep -q "^${service}$"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+get_container_name() {
+    local service="$1"
+    docker compose -f "$COMPOSE_FILE" ps --format json | jq -r "select(.Service == \"$service\") | .Name" 2>/dev/null | head -1
+}
+
+check_container_running() {
+    local service="$1"
+    local container_name
+    
+    container_name=$(get_container_name "$service")
+    
+    if [[ -n "$container_name" ]] && docker ps --filter "name=$container_name" --filter "status=running" --format "{{.Names}}" | grep -q "$container_name"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+check_port_accessible() {
+    local host="$1"
+    local port="$2"
+    local timeout="${3:-3}"
+    
+    timeout "$timeout" bash -c "</dev/tcp/$host/$port" 2>/dev/null
+}
+
+detailed_health_check() {
+    local service="$1"
+    
+    echo "🔍 Detailed Health Check: $service"
+    echo "==============================="
+    
+    # Container status
+    local container_name
+    container_name=$(get_container_name "$service")
+    
+    if [[ -n "$container_name" ]]; then
+        local container_status
+        container_status=$(docker inspect "$container_name" --format "{{.State.Status}}" 2>/dev/null || echo "not found")
+        
+        case "$container_status" in
+            "running")
+                echo "✅ Container: Running"
+                
+                # Health check status
+                local health_status
+                health_status=$(docker inspect "$container_name" --format "{{.State.Health.Status}}" 2>/dev/null || echo "none")
+                
+                case "$health_status" in
+                    "healthy")
+                        echo "✅ Health Check: Healthy"
+                        ;;
+                    "unhealthy")
+                        echo "❌ Health Check: Unhealthy"
+                        log_warn "Checking health check command..."
+                        
+                        # Show last health check result
+                        docker inspect "$container_name" --format "{{range .State.Health.Log}}{{.Output}}{{end}}" 2>/dev/null | tail -1
+                        ;;
+                    "starting")
+                        echo "⏳ Health Check: Starting"
+                        ;;
+                    *)
+                        echo "ℹ️ Health Check: Not configured"
+                        ;;
+                esac
+                
+                # Resource usage
+                local stats
+                stats=$(docker stats "$container_name" --no-stream --format "table {{.CPUPerc}}\t{{.MemUsage}}" 2>/dev/null | tail -1)
+                if [[ -n "$stats" ]]; then
+                    echo "📊 Resources: $stats"
+                fi
+                
+                # Port accessibility
+                check_service_ports "$service"
+                
+                ;;
+            "exited")
+                echo "❌ Container: Exited"
+                local exit_code
+                exit_code=$(docker inspect "$container_name" --format "{{.State.ExitCode}}" 2>/dev/null)
+                echo "💥 Exit Code: $exit_code"
+                ;;
+            "not found")
+                echo "❌ Container: Not found"
+                ;;
+            *)
+                echo "⚠️ Container: $container_status"
+                ;;
+        esac
+        
+        # Uptime
+        local started_at
+        started_at=$(docker inspect "$container_name" --format "{{.State.StartedAt}}" 2>/dev/null)
+        if [[ -n "$started_at" ]] && [[ "$started_at" != "0001-01-01T00:00:00Z" ]]; then
+            echo "⏱️ Started: $(date -d "$started_at" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "$started_at")"
+        fi
+    else
+        echo "❌ Container: Not found"
+    fi
+}
+
+check_service_ports() {
+    local service="$1"
+    
+    case "$service" in
+        "qdrant")
+            if check_port_accessible "localhost" "6333" 2; then
+                echo "✅ Port 6333: Accessible"
+                
+                # Test API endpoint
+                if curl -sf --max-time 3 "http://localhost:6333/readyz" >/dev/null 2>&1; then
+                    local response
+                    response=$(curl -s --max-time 3 "http://localhost:6333/readyz" 2>/dev/null)
+                    echo "✅ API: $response"
+                else
+                    echo "❌ API: Not responding"
+                fi
+            else
+                echo "❌ Port 6333: Not accessible"
+            fi
+            ;;
+        "postgres")
+            if check_port_accessible "localhost" "5432" 2; then
+                echo "✅ Port 5432: Accessible"
+            else
+                echo "ℹ️ Port 5432: Not exposed (internal only)"
+            fi
+            
+            # Test database connection
+            local container_name
+            container_name=$(get_container_name "postgres")
+            if [[ -n "$container_name" ]]; then
+                if docker exec "$container_name" pg_isready -U cguser >/dev/null 2>&1; then
+                    echo "✅ Database: Ready"
+                else
+                    echo "❌ Database: Not ready"
+                fi
+            fi
+            ;;
+        "claude-guardian-mcp")
+            if check_port_accessible "localhost" "8083" 2; then
+                echo "✅ Port 8083: Accessible"
+                
+                # Test health endpoint
+                if curl -sf --max-time 3 "http://localhost:8083/health" >/dev/null 2>&1; then
+                    echo "✅ Health Endpoint: Responding"
+                else
+                    echo "❌ Health Endpoint: Not responding"
+                fi
+            else
+                echo "❌ Port 8083: Not accessible"
+            fi
+            ;;
+    esac
+}
+
+start_services() {
+    local services=($@)
+    
+    log_info "Starting services: ${services[*]}"
+    
+    cd "$COMPOSE_DIR"
+    
+    # Check for conflicts
+    for service in "${services[@]}"; do
+        if check_container_running "$service"; then
+            log_warn "Service $service is already running"
+        fi
+    done
+    
+    # Start services
+    if docker compose -f docker-compose.production.yml up -d "${services[@]}"; then
+        log_success "Services started successfully"
+        
+        # Wait for health checks
+        sleep 3
+        check_services_health "${services[@]}"
+    else
+        log_error "Failed to start services"
+        exit 1
+    fi
+}
+
+stop_services() {
+    local services=($@)
+    
+    log_info "Stopping services: ${services[*]}"
+    
+    cd "$COMPOSE_DIR"
+    
+    if docker compose -f docker-compose.production.yml stop "${services[@]}"; then
+        log_success "Services stopped successfully"
+    else
+        log_error "Failed to stop services"
+        exit 1
+    fi
+}
+
+restart_services() {
+    local services=($@)
+    
+    log_info "Restarting services: ${services[*]}"
+    
+    cd "$COMPOSE_DIR"
+    
+    if docker compose -f docker-compose.production.yml restart "${services[@]}"; then
+        log_success "Services restarted successfully"
+        
+        # Wait for health checks
+        sleep 3
+        check_services_health "${services[@]}"
+    else
+        log_error "Failed to restart services"
+        exit 1
+    fi
+}
+
+show_service_status() {
+    local services=($@)
+    
+    cd "$COMPOSE_DIR"
+    
+    if [[ ${#services[@]} -eq 1 ]] && [[ "${services[0]}" != "all" ]]; then
+        # Single service detailed status
+        local service="${services[0]}"
+        echo "📊 Service Status: $service"
+        echo "========================"
+        docker compose -f docker-compose.production.yml ps "$service" --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+    else
+        # Multiple services overview
+        echo "📊 Services Status Overview"
+        echo "=========================="
+        docker compose -f docker-compose.production.yml ps "${services[@]}" --format "table {{.Service}}\t{{.Status}}\t{{.Ports}}"
+    fi
+}
+
+check_services_health() {
+    local services=($@)
+    
+    echo ""
+    echo "🏥 Health Status:"
+    echo "================"
+    
+    for service in "${services[@]}"; do
+        local container_name
+        container_name=$(get_container_name "$service")
+        
+        if [[ -n "$container_name" ]]; then
+            local health_status
+            health_status=$(docker inspect "$container_name" --format "{{.State.Health.Status}}" 2>/dev/null || echo "none")
+            
+            case "$health_status" in
+                "healthy")
+                    echo "✅ $service: Healthy"
+                    ;;
+                "unhealthy")
+                    echo "❌ $service: Unhealthy"
+                    ;;
+                "starting")
+                    echo "⏳ $service: Starting"
+                    ;;
+                *)
+                    if check_container_running "$service"; then
+                        echo "ℹ️ $service: Running (no health check)"
+                    else
+                        echo "❌ $service: Not running"
+                    fi
+                    ;;
+            esac
+        else
+            echo "❌ $service: Container not found"
+        fi
+    done
+}
+
+show_service_logs() {
+    local service="$1"
+    local lines="${2:-50}"
+    
+    cd "$COMPOSE_DIR"
+    
+    log_info "Showing last $lines lines for $service:"
+    echo "========================================"
+    docker compose -f docker-compose.production.yml logs --tail "$lines" "$service"
+}
+
+complete_diagnostics() {
+    local service="$1"
+    
+    echo "🔧 Complete Diagnostics: $service"
+    echo "=================================="
+    
+    # Detailed health check
+    detailed_health_check "$service"
+    
+    echo ""
+    echo "📋 Recent Logs (last 10 lines):"
+    echo "==============================="
+    show_service_logs "$service" 10
+}
+
+main() {
+    check_requirements
+    
+    local command="${1:-}"
+    local service_input="${2:-}"
+    local services
+    
+    case "$command" in
+        start)
+            if [[ -n "$service_input" ]]; then
+                validate_service "$service_input"
+            fi
+            services=($(get_services "$service_input"))
+            start_services "${services[@]}"
+            ;;
+        stop)
+            if [[ -z "$service_input" ]]; then
+                log_error "Service name required for stop command"
+                usage
+            fi
+            validate_service "$service_input"
+            services=($(get_services "$service_input"))
+            stop_services "${services[@]}"
+            ;;
+        restart)
+            if [[ -n "$service_input" ]]; then
+                validate_service "$service_input"
+            fi
+            services=($(get_services "$service_input"))
+            restart_services "${services[@]}"
+            ;;
+        status)
+            if [[ -n "$service_input" ]]; then
+                validate_service "$service_input"
+            fi
+            services=($(get_services "$service_input"))
+            show_service_status "${services[@]}"
+            ;;
+        health)
+            if [[ -z "$service_input" ]]; then
+                services=($(get_services ""))
+                check_services_health "${services[@]}"
+            else
+                validate_service "$service_input"
+                detailed_health_check "$service_input"
+            fi
+            ;;
+        logs)
+            if [[ -z "$service_input" ]]; then
+                log_error "Service name required for logs command"
+                usage
+            fi
+            validate_service "$service_input"
+            show_service_logs "$service_input" "${3:-50}"
+            ;;
+        diagnose)
+            if [[ -z "$service_input" ]]; then
+                log_error "Service name required for diagnose command"
+                usage
+            fi
+            validate_service "$service_input"
+            complete_diagnostics "$service_input"
+            ;;
+        "")
+            log_error "No command specified"
+            usage
+            ;;
+        *)
+            log_error "Unknown command: $command"
+            usage
+            ;;
+    esac
+}
+
+main "$@"
