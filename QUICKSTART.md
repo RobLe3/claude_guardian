@@ -38,11 +38,14 @@ curl http://localhost:8083/health       # MCP service
 
 ### **Step 3: Connect to Claude Code**
 ```bash
-# Start MCP service for Claude Code
+# Start MCP service for Claude Code (recommended method)
 cd ../../  # Back to repository root
-python3 scripts/start-mcp-service.py --port 8083
+scripts/guardian-mcp start
 
-# In another terminal, test integration
+# Alternative: Direct Python invocation
+# python3 scripts/start-mcp-service.py --port 8083
+
+# Test integration
 python3 scripts/validate-mcp-tools.py
 ```
 
@@ -91,13 +94,35 @@ curl http://localhost:6333/collections  # Qdrant should return empty array
 
 ### **Security Service Setup**
 ```bash
-# Start MCP service (separate terminal recommended)
-python3 scripts/start-mcp-service.py --port 8083
+# Start MCP service (recommended method)
+scripts/guardian-mcp start
 
 # Expected output:
-# INFO - Claude Guardian MCP Server starting on localhost:8083
-# INFO - Server info: claude-guardian v1.3.1
-# INFO - 5 security tools loaded
+# ✅ Claude Guardian MCP Server started successfully
+# 📝 Process ID: 1234
+# 🔗 WebSocket: ws://localhost:8083
+# 📄 Logs: /tmp/guardian-mcp-8083.log
+
+# Alternative: Direct Python invocation
+# python3 scripts/start-mcp-service.py --port 8083
+```
+
+### **MCP Server Management**
+```bash
+# Check server status
+scripts/guardian-mcp status
+
+# Stop server
+scripts/guardian-mcp stop
+
+# Restart server
+scripts/guardian-mcp restart
+
+# View logs
+scripts/guardian-mcp logs
+
+# Start on different port
+scripts/guardian-mcp start 8084
 ```
 
 ---
@@ -193,11 +218,14 @@ python3 scripts/test_mcp_integration.py
 
 **Issue: Port 8083 already in use**
 ```bash
-# Check what's using the port
-lsof -i :8083
+# Check server status (automatically detects conflicts)
+scripts/guardian-mcp status
 
-# Use different port
-python3 scripts/start-mcp-service.py --port 8084
+# Stop existing server and restart
+scripts/guardian-mcp restart
+
+# Or start on different port
+scripts/guardian-mcp start 8084
 ```
 
 **Issue: Docker containers won't start**
@@ -213,15 +241,14 @@ docker-compose -f docker-compose.production.yml up -d
 
 **Issue: MCP connection fails**
 ```bash
-# Verify MCP service is running
-curl http://localhost:8083/health
+# Check MCP server status
+scripts/guardian-mcp status
 
-# Check logs
-tail -f mcp-service.log
+# View real-time logs
+scripts/guardian-mcp logs
 
-# Restart MCP service
-pkill -f "start-mcp-service.py"
-python3 scripts/start-mcp-service.py --port 8083
+# Restart MCP service cleanly
+scripts/guardian-mcp restart
 ```
 
 **Issue: Missing Python dependencies**

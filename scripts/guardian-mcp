@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+# Claude Guardian MCP Server Management Script
+# Provides easy commands for managing the MCP service lifecycle
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MCP_SCRIPT="$SCRIPT_DIR/start-mcp-service.py"
+DEFAULT_PORT=8083
+
+usage() {
+    echo "Claude Guardian MCP Server Management"
+    echo "======================================"
+    echo ""
+    echo "Usage: $0 {start|stop|restart|status|logs} [port]"
+    echo ""
+    echo "Commands:"
+    echo "  start [port]   - Start MCP server (default port: $DEFAULT_PORT)"
+    echo "  stop [port]    - Stop MCP server running on port"
+    echo "  restart [port] - Restart MCP server"
+    echo "  status [port]  - Check MCP server status"
+    echo "  logs [port]    - Show MCP server logs (if available)"
+    echo ""
+    echo "Examples:"
+    echo "  $0 start                # Start on default port $DEFAULT_PORT"
+    echo "  $0 start 8084           # Start on port 8084"
+    echo "  $0 stop                 # Stop server on default port"
+    echo "  $0 restart 8084         # Restart server on port 8084"
+    echo "  $0 status               # Check status on default port"
+    echo ""
+    exit 1
+}
+
+check_requirements() {
+    if ! command -v python3 &> /dev/null; then
+        echo "❌ Error: python3 not found"
+        echo "Please install Python 3.8+ to run Claude Guardian MCP server"
+        exit 1
+    fi
+    
+    if [ ! -f "$MCP_SCRIPT" ]; then
+        echo "❌ Error: MCP script not found at $MCP_SCRIPT"
+        echo "Please run this script from the Claude Guardian repository root"
+        exit 1
+    fi
+}
+
+get_port() {
+    echo "${2:-$DEFAULT_PORT}"
+}
+
+check_status() {
+    local port=$(get_port "$@")
+    local pid_file="/tmp/claude-guardian-mcp-${port}.pid"
+    
+    if [ -f "$pid_file" ]; then
+        local pid=$(cat "$pid_file" 2>/dev/null || echo "")
+        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            echo "✅ Claude Guardian MCP server running (PID: $pid, Port: $port)"
+            echo "📊 Memory usage: $(ps -o rss= -p "$pid" 2>/dev/null | awk '{print $1/1024 " MB"}' || echo "unknown")"
+            echo "⏱️  Started: $(ps -o lstart= -p "$pid" 2>/dev/null || echo "unknown")"
+            return 0
+        else
+            echo "⚠️  Stale PID file found, cleaning up..."
+            rm -f "$pid_file"
+        fi
+    fi
+    
+    # Check if something else is using the port
+    if lsof -i ":$port" >/dev/null 2>&1; then
+        echo "⚠️  Port $port is in use by another process:"
+        lsof -i ":$port" 2>/dev/null || echo "Cannot determine process"
+        return 2
+    else
+        echo "⭕ No Claude Guardian MCP server running on port $port"
+        return 1
+    fi
+}
+
+start_server() {
+    local port=$(get_port "$@")
+    
+    echo "🚀 Starting Claude Guardian MCP Server on port $port..."
+    
+    # Check if already running
+    if check_status "" "$port" >/dev/null 2>&1; then
+        echo "⚠️  MCP server already running on port $port"
+        echo "Use '$0 restart $port' to restart or '$0 stop $port' to stop"
+        return 1
+    fi
+    
+    # Start server in background
+    nohup python3 "$MCP_SCRIPT" --port "$port" > "/tmp/guardian-mcp-$port.log" 2>&1 &
+    local server_pid=$!
+    
+    # Wait a moment for startup
+    sleep 2
+    
+    # Verify it started
+    if kill -0 "$server_pid" 2>/dev/null; then
+        echo "✅ Claude Guardian MCP Server started successfully"
+        echo "📝 Process ID: $server_pid"
+        echo "🔗 WebSocket: ws://localhost:$port"
+        echo "📄 Logs: /tmp/guardian-mcp-$port.log"
+        echo ""
+        echo "To connect from Claude Code, add this to your MCP configuration:"
+        echo "{"
+        echo "  \"name\": \"claude-guardian\","
+        echo "  \"command\": \"python3\","
+        echo "  \"args\": [\"$(pwd)/scripts/start-mcp-service.py\", \"--port\", \"$port\"]"
+        echo "}"
+    else
+        echo "❌ Failed to start MCP server"
+        echo "Check logs: tail /tmp/guardian-mcp-$port.log"
+        return 1
+    fi
+}
+
+stop_server() {
+    local port=$(get_port "$@")
+    echo "🛑 Stopping Claude Guardian MCP Server on port $port..."
+    python3 "$MCP_SCRIPT" --port "$port" --stop
+}
+
+restart_server() {
+    local port=$(get_port "$@")
+    echo "🔄 Restarting Claude Guardian MCP Server on port $port..."
+    python3 "$MCP_SCRIPT" --port "$port" --restart > "/tmp/guardian-mcp-$port.log" 2>&1 &
+    sleep 2
+    check_status "" "$port"
+}
+
+show_logs() {
+    local port=$(get_port "$@")
+    local log_file="/tmp/guardian-mcp-$port.log"
+    
+    if [ -f "$log_file" ]; then
+        echo "📄 Claude Guardian MCP Server logs (port $port):"
+        echo "========================================"
+        tail -n 20 "$log_file"
+        echo ""
+        echo "For live logs: tail -f $log_file"
+    else
+        echo "⚠️  No log file found for port $port"
+        echo "Expected location: $log_file"
+    fi
+}
+
+main() {
+    check_requirements
+    
+    case "${1:-}" in
+        start)
+            start_server "$@"
+            ;;
+        stop)
+            stop_server "$@"
+            ;;
+        restart)
+            restart_server "$@"
+            ;;
+        status)
+            check_status "$@"
+            ;;
+        logs)
+            show_logs "$@"
+            ;;
+        "")
+            echo "❌ Error: No command specified"
+            echo ""
+            usage
+            ;;
+        *)
+            echo "❌ Error: Unknown command '$1'"
+            echo ""
+            usage
+            ;;
+    esac
+}
+
+main "$@"

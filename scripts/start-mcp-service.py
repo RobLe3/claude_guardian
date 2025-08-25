@@ -10,6 +10,10 @@ import logging
 import re
 import time
 import websockets
+import signal
+import socket
+import os
+import sys
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 import argparse
@@ -25,6 +29,10 @@ class IFFGuardianMCPServer:
         self.host = host
         self.port = port
         self.sessions = {}
+        self.server = None
+        self.shutdown_event = asyncio.Event()
+        self.pid_file = f"/tmp/claude-guardian-mcp-{port}.pid"
+        
         self.server_info = {
             "name": "claude-guardian",
             "version": "1.3.1"
@@ -39,6 +47,122 @@ class IFFGuardianMCPServer:
         # Load security tools registry
         self.security_tools = self.load_security_tools()
         self.security_resources = self.load_security_resources()
+        
+        # Setup signal handlers for graceful shutdown
+        self.setup_signal_handlers()
+    
+    def setup_signal_handlers(self):
+        """Setup signal handlers for graceful shutdown"""
+        def signal_handler(signum, frame):
+            logger.info(f"Received signal {signum}, initiating shutdown...")
+            asyncio.create_task(self.shutdown())
+        
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+    
+    def check_port_available(self) -> bool:
+        """Check if the port is available"""
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1)
+            result = sock.connect_ex((self.host, self.port))
+            sock.close()
+            return result != 0  # Port is available if connection fails
+        except Exception:
+            return False
+    
+    def check_existing_instance(self) -> Optional[int]:
+        """Check if there's already a Guardian MCP server running on this port"""
+        if os.path.exists(self.pid_file):
+            try:
+                with open(self.pid_file, 'r') as f:
+                    pid = int(f.read().strip())
+                
+                # Check if process is still running
+                try:
+                    os.kill(pid, 0)  # Signal 0 just checks if process exists
+                    return pid
+                except OSError:
+                    # Process not running, remove stale PID file
+                    os.remove(self.pid_file)
+                    return None
+            except (ValueError, IOError):
+                # Invalid PID file, remove it
+                try:
+                    os.remove(self.pid_file)
+                except OSError:
+                    pass
+                return None
+        return None
+    
+    def write_pid_file(self):
+        """Write current PID to file"""
+        try:
+            with open(self.pid_file, 'w') as f:
+                f.write(str(os.getpid()))
+        except IOError as e:
+            logger.warning(f"Could not write PID file: {e}")
+    
+    def cleanup_pid_file(self):
+        """Remove PID file"""
+        try:
+            if os.path.exists(self.pid_file):
+                os.remove(self.pid_file)
+        except OSError as e:
+            logger.warning(f"Could not remove PID file: {e}")
+    
+    async def shutdown(self):
+        """Graceful shutdown"""
+        logger.info("Shutting down Claude Guardian MCP Server...")
+        
+        # Signal shutdown
+        self.shutdown_event.set()
+        
+        # Close server if running
+        if self.server:
+            logger.info("Closing WebSocket server...")
+            self.server.close()
+            await self.server.wait_closed()
+        
+        # Clean up PID file
+        self.cleanup_pid_file()
+        
+        logger.info("✅ Claude Guardian MCP Server shutdown complete")
+    
+    def stop_existing_instance(self, pid: int) -> bool:
+        """Stop existing MCP server instance"""
+        try:
+            logger.info(f"Found existing Claude Guardian MCP server (PID: {pid})")
+            logger.info("Stopping existing instance...")
+            
+            # Try graceful shutdown first
+            os.kill(pid, signal.SIGTERM)
+            
+            # Wait up to 5 seconds for graceful shutdown
+            for _ in range(50):
+                try:
+                    os.kill(pid, 0)  # Check if still running
+                    time.sleep(0.1)
+                except OSError:
+                    logger.info("✅ Existing instance stopped gracefully")
+                    return True
+            
+            # Force kill if still running
+            logger.warning("Existing instance not responding, forcing shutdown...")
+            os.kill(pid, signal.SIGKILL)
+            time.sleep(0.5)
+            
+            try:
+                os.kill(pid, 0)
+                logger.error("Failed to stop existing instance")
+                return False
+            except OSError:
+                logger.info("✅ Existing instance force-stopped")
+                return True
+                
+        except OSError as e:
+            logger.error(f"Error stopping existing instance: {e}")
+            return False
     
     def load_security_tools(self) -> List[Dict[str, Any]]:
         """Load security tools configuration"""
@@ -646,20 +770,45 @@ class IFFGuardianMCPServer:
         }
     
     async def start_server(self):
-        """Start the MCP WebSocket server"""
+        """Start the MCP WebSocket server with proper lifecycle management"""
+        
+        # Check for existing instance
+        existing_pid = self.check_existing_instance()
+        if existing_pid:
+            if not self.stop_existing_instance(existing_pid):
+                logger.error(f"Failed to stop existing instance on port {self.port}")
+                sys.exit(1)
+        
+        # Check port availability
+        if not self.check_port_available():
+            logger.error(f"Port {self.port} is not available")
+            logger.info(f"Try: lsof -i :{self.port} to see what's using the port")
+            sys.exit(1)
+        
         logger.info(f"Starting Claude Guardian MCP Server on {self.host}:{self.port}")
         
-        start_server = websockets.serve(
-            self.handle_client,
-            self.host,
-            self.port
-        )
-        
-        await start_server
-        logger.info(f"✅ Claude Guardian MCP Server running on ws://{self.host}:{self.port}")
-        
-        # Keep the server running
-        await asyncio.Future()  # Run forever
+        try:
+            # Create and start the WebSocket server
+            self.server = await websockets.serve(
+                self.handle_client,
+                self.host,
+                self.port
+            )
+            
+            # Write PID file for instance management
+            self.write_pid_file()
+            
+            logger.info(f"✅ Claude Guardian MCP Server running on ws://{self.host}:{self.port}")
+            logger.info(f"📝 Process ID: {os.getpid()}")
+            logger.info(f"🛑 To stop: kill -TERM {os.getpid()} or Ctrl+C")
+            
+            # Wait for shutdown signal
+            await self.shutdown_event.wait()
+            
+        except Exception as e:
+            logger.error(f"Failed to start server: {e}")
+            self.cleanup_pid_file()
+            raise
 
 async def main():
     """Main entry point"""
@@ -667,6 +816,8 @@ async def main():
     parser.add_argument("--host", default="localhost", help="Host to bind to")
     parser.add_argument("--port", type=int, default=8083, help="Port to bind to")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
+    parser.add_argument("--stop", action="store_true", help="Stop existing instance on this port")
+    parser.add_argument("--restart", action="store_true", help="Restart (stop existing and start new)")
     
     args = parser.parse_args()
     
@@ -675,12 +826,38 @@ async def main():
     
     server = IFFGuardianMCPServer(args.host, args.port)
     
+    # Handle stop command
+    if args.stop:
+        existing_pid = server.check_existing_instance()
+        if existing_pid:
+            if server.stop_existing_instance(existing_pid):
+                logger.info("✅ MCP server stopped successfully")
+                sys.exit(0)
+            else:
+                logger.error("❌ Failed to stop MCP server")
+                sys.exit(1)
+        else:
+            logger.info(f"ℹ️ No MCP server running on port {args.port}")
+            sys.exit(0)
+    
+    # Handle restart command  
+    if args.restart:
+        existing_pid = server.check_existing_instance()
+        if existing_pid:
+            logger.info("🔄 Restarting MCP server...")
+            if not server.stop_existing_instance(existing_pid):
+                logger.error("❌ Failed to stop existing instance for restart")
+                sys.exit(1)
+        # Continue to start new instance
+    
     try:
         await server.start_server()
     except KeyboardInterrupt:
-        logger.info("Shutting down MCP server...")
+        logger.info("⚠️ Keyboard interrupt received")
+        await server.shutdown()
     except Exception as e:
         logger.error(f"Server error: {e}")
+        await server.shutdown()
         raise
 
 if __name__ == "__main__":

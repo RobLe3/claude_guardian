@@ -89,11 +89,11 @@
 git clone https://github.com/RobLe3/claude_guardian.git
 cd claude_guardian
 
-# Deploy production stack
+# Deploy production stack  
 cd deployments/production && docker-compose -f docker-compose.production.yml up -d
 
 # Start MCP service for Claude Code
-cd ../../ && python3 scripts/start-mcp-service.py --port 8083
+cd ../../ && scripts/guardian-mcp start
 ```
 
 ### **Claude Code Integration**

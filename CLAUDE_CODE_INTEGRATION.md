@@ -8,13 +8,17 @@
 
 ### **Step 1: Start Claude Guardian**
 ```bash
-# From Claude Guardian repository root
-python3 scripts/start-mcp-service.py --port 8083
+# From Claude Guardian repository root (recommended method)
+scripts/guardian-mcp start
 
 # Expected output:
-# INFO - Claude Guardian MCP Server running on ws://localhost:8083
-# INFO - Server info: claude-guardian v1.3.1
-# INFO - 5 security tools loaded
+# ✅ Claude Guardian MCP Server started successfully
+# 📝 Process ID: 1234
+# 🔗 WebSocket: ws://localhost:8083
+# 📄 Logs: /tmp/guardian-mcp-8083.log
+
+# Alternative: Direct Python invocation
+# python3 scripts/start-mcp-service.py --port 8083
 ```
 
 ### **Step 2: Configure Claude Code MCP**
@@ -177,14 +181,14 @@ When connected, Claude Code will have access to these tools:
 
 ### **Basic Connection Test**
 ```bash
-# In terminal 1: Start Claude Guardian
-python3 scripts/start-mcp-service.py --port 8083
+# Start Claude Guardian (automatically manages conflicts)
+scripts/guardian-mcp start
 
-# In terminal 2: Test connection
+# Test connection
 python3 scripts/validate-mcp-tools.py
 
 # Expected output:
-# ✅ MCP Server: Connected (claude-guardian v1.3.1)
+# ✅ MCP Server: Connected (claude-guardian v1.3.1)  
 # ✅ Tools Available: 5/5
 # ✅ Connection Status: Operational
 ```
@@ -280,14 +284,14 @@ curl -X POST http://localhost:8083/mcp \
 
 **Restart both services:**
 ```bash
-# Kill existing MCP service
-pkill -f "start-mcp-service.py"
+# Restart Guardian MCP service cleanly
+scripts/guardian-mcp restart
 
-# Restart Claude Code MCP connection
+# Check status
+scripts/guardian-mcp status
+
+# Restart Claude Code MCP connection if needed
 # (Restart Claude Code application)
-
-# Start Guardian MCP service
-python3 scripts/start-mcp-service.py --port 8083
 ```
 
 ### **Performance issues**
