@@ -104,4 +104,10 @@ grafana_data/
 *.backup
 backup/
 backups/
+
+# Development documentation and artifacts
+dev-docs/
+dev-scripts/
+dev-logs/
+dev-legacy/
 EOF < /dev/null
