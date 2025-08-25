@@ -1,5 +1,7 @@
 # Claude Guardian
 
+**Version: v1.3.1** | **Status: Production Ready** | **API: v1.3**
+
 **Claude Guardian** is a production-ready AI-powered security system designed to protect Claude Code and development environments from malicious coding techniques, resource hijacking, and repository damage through real-time threat detection, vector-graph correlation analysis, and intelligent security response.
 
 ---
@@ -243,14 +245,15 @@ python3 scripts/test_false_positive_improvements.py
 
 ## 🎯 **Development Maturity & Future Direction**
 
-### **Current Achievement Level: Context-Aware Security Analysis (91.7% Detection Accuracy)**
+### **Current Achievement Level: Complete Advanced Security System (v1.3.1)**
 
 **What We've Built:**
-- ✅ **Context-Aware Detection Engine**: 91.7% accuracy with 0% false positive rate on legitimate code
+- ✅ **Multi-Layered Detection Engine**: Context-aware patterns + data flow analysis (91.7% accuracy, 0% false positives)
+- ✅ **Advanced Threat Analysis**: Hybrid patterns with context requirements and flow detection
 - ✅ **Vector-Graph Intelligence System**: 100% operational with integrated threat analysis
 - ✅ **Full MCP Integration**: 5 security tools ready for Claude Code
 - ✅ **Production Docker Stack**: Complete containerized deployment
-- ✅ **Enhanced Security Scanner**: Intent classification and contextual risk assessment
+- ✅ **Comprehensive Documentation**: Complete evolution tracking and deployment guides
 
 ### **Where We're Heading**
 
@@ -334,7 +337,13 @@ docker-compose -f docker-compose.dev.yml up -d
 
 ---
 
-## 📄 **License**
+## 📄 **Version & License**
+
+**Current Version**: v1.3.1 (Complete Advanced Security System)  
+**API Version**: v1.3 (Backward compatible with v1.0+)  
+**Release Date**: August 25, 2025  
+
+For complete version history and upgrade guides, see [CHANGELOG.md](CHANGELOG.md).
 
 MIT License - see [LICENSE](LICENSE) file for details.
 

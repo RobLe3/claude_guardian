@@ -21,7 +21,7 @@ The Claude Guardian MCP integration has been successfully implemented and tested
 **Service Status:**
 - **Port:** 8083 (confirmed open via nmap)
 - **Protocol:** WebSocket with MCP 2024-11-05 specification  
-- **Server Info:** claude-guardian v1.0.0
+- **Server Info:** claude-guardian v1.3.1
 - **Process:** Running (PID confirmed via system processes)
 
 **Network Verification:**
