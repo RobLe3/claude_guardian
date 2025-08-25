@@ -6,7 +6,7 @@ app:
   debug: false
   reload: false
   log_level: "INFO"
-  version: "1.0.0-staging"
+  version: "1.3.1-staging"
 
 server:
   host: "0.0.0.0"
