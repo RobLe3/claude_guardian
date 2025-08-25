@@ -27,7 +27,7 @@ class IFFGuardianMCPServer:
         self.sessions = {}
         self.server_info = {
             "name": "claude-guardian",
-            "version": "1.0.0"
+            "version": "1.3.1"
         }
         self.capabilities = {
             "tools": {"listChanged": True},

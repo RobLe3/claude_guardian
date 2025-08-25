@@ -44,3 +44,6 @@ aiohttp==3.9.1
 click==8.1.7
 rich==13.7.0
 typer==0.9.0
+
+# WebSocket support for MCP
+websockets>=11.0.0

@@ -79,37 +79,35 @@
 
 ## 🏃 **Quick Start**
 
-### **Production Deployment (Recommended)**
+**⚡ 5-Minute Setup:** See [QUICKSTART.md](QUICKSTART.md) for complete installation guide.
+**🔗 Claude Code:** See [CLAUDE_CODE_INTEGRATION.md](CLAUDE_CODE_INTEGRATION.md) for MCP setup.
+
+### **One-Command Setup**
 
 ```bash
-# Navigate to Claude Guardian directory
-cd /path/to/claude-guardian  # Update with your actual path
+# Clone and start
+git clone https://github.com/RobLe3/claude_guardian.git
+cd claude_guardian
 
-# Production deployment
-cd deployments/production/
-cp .env.template .env
-# Edit .env with your credentials
+# Deploy production stack
+cd deployments/production && docker-compose -f docker-compose.production.yml up -d
 
-# Start full stack
-docker-compose -f docker-compose.production.yml up -d
-
-# Verify deployment
-curl http://localhost:6333/collections  # Qdrant vector DB
-curl http://localhost:8083/health       # MCP service
+# Start MCP service for Claude Code
+cd ../../ && python3 scripts/start-mcp-service.py --port 8083
 ```
 
-### **MCP Integration with Claude Code**
+### **Claude Code Integration**
 
-```bash
-# Start MCP service for Claude Code integration
-python3 scripts/start-mcp-service.py --port 8083
-
-# Test security tools
-python3 scripts/validate-mcp-tools.py
-
-# Full functionality test
-python3 scripts/test_full_stack.py
+```json
+// Add to Claude Code MCP configuration:
+{
+  "name": "claude-guardian",
+  "command": "python3",
+  "args": ["/path/to/claude_guardian/scripts/start-mcp-service.py", "--port", "8083"]
+}
 ```
+
+**✅ Ready!** Claude Code now has 5 security tools for real-time protection.
 
 ---
 
