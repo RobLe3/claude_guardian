@@ -29,7 +29,7 @@ class Version:
 GUARDIAN_VERSION = Version(
     major=1,
     minor=3,
-    patch=1,
+    patch=2,
     pre_release="",
     build_metadata=""
 )
@@ -129,6 +129,26 @@ VERSION_HISTORY = {
             "avg_time_ms": 0.20,
             "false_positive_rate": 0.0,
             "detection_capabilities": "Complete system with full documentation"
+        },
+        "compatibility": {
+            "api_version": "1.3",
+            "mcp_protocol": "1.0",
+            "python_min": "3.8"
+        }
+    },
+    "1.3.2": {
+        "name": "Production-Ready Release",
+        "release_date": "2025-08-25",
+        "features": [
+            "Enterprise-grade lifecycle management",
+            "Repository cleanup and organization",
+            "Version harmonization across components",
+            "Out-of-the-box deployment experience"
+        ],
+        "performance": {
+            "avg_time_ms": 0.20,
+            "false_positive_rate": 0.0,
+            "detection_capabilities": "Production-ready with enterprise management"
         },
         "compatibility": {
             "api_version": "1.3",

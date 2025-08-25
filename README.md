@@ -1,6 +1,6 @@
 # Claude Guardian
 
-**Version: v1.3.1** | **Status: Production Ready** | **API: v1.3**
+**Version: v1.3.2** | **Status: Production Ready** | **API: v1.3**
 
 **Claude Guardian** is a production-ready AI-powered security system designed to protect Claude Code and development environments from malicious coding techniques, resource hijacking, and repository damage through real-time threat detection, vector-graph correlation analysis, and intelligent security response.
 

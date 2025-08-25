@@ -1,6 +1,6 @@
 # Claude Code Integration Guide
 
-**Claude Guardian v1.3.1** - Complete integration guide for Claude Code MCP connection.
+**Claude Guardian v1.3.2** - Complete integration guide for Claude Code MCP connection.
 
 ---
 

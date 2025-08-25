@@ -1,6 +1,6 @@
 # Claude Guardian - Quick Start Guide
 
-**Version: v1.3.1** | **Setup Time: 5 minutes** | **Requirements: Docker + Python 3.8+**
+**Version: v1.3.2** | **Setup Time: 5 minutes** | **Requirements: Docker + Python 3.8+**
 
 Complete setup guide for Claude Guardian from repository to Claude Code integration.
 
