@@ -164,8 +164,8 @@ class AdvancedPatternDetector:
             
             for match in primary_matches:
                 detection = self._analyze_pattern_match(code, pattern, match)
-                # Stricter threshold to prevent false positives
-                if detection['final_risk_score'] > 6.0 and detection['confidence'] > 0.8:
+                # Balanced threshold for better detection coverage
+                if detection['final_risk_score'] > 4.5 and detection['confidence'] > 0.7:
                     detections.append(detection)
         
         return detections
@@ -253,19 +253,18 @@ class Phase1BEnhancedScanner(ConservativeEnhancedSecurityScanner):
         phase_1a_result = super().enhanced_security_scan(code, language, security_level)
         phase_1a_time = (time.time() - scan_start_time) * 1000
         
-        # ➕ ADD Phase 1B targeted pattern detection (ultra-conservative)
+        # ➕ ADD Phase 1B targeted pattern detection (balanced approach)
         if (language.lower() == "python" and 
-            len(code) > 100 and len(code) < 1000 and  # Very tight size limits
-            phase_1a_time < 0.5 and  # Phase 1A must be extremely fast
-            phase_1a_result['risk_level'] in ['medium', 'high', 'critical']):  # Only on risky code
+            len(code) > 50 and len(code) < 2000 and  # Reasonable size limits
+            phase_1a_time < 1.0):  # Phase 1A reasonably fast
             
             try:
                 phase_1b_start = time.time()
                 enhanced_result = self._add_phase_1b_enhancements(code, phase_1a_result)
                 phase_1b_time = (time.time() - phase_1b_start) * 1000
                 
-                # Stricter performance requirement (<1ms)
-                if phase_1b_time < 1.0:
+                # Balanced performance requirement (<2ms for better detection)
+                if phase_1b_time < 2.0:
                     self._performance_stats['phase_1b_detections'] += 1
                     return enhanced_result
                 
@@ -279,8 +278,9 @@ class Phase1BEnhancedScanner(ConservativeEnhancedSecurityScanner):
     def _add_phase_1b_enhancements(self, code: str, phase_1a_result: Dict[str, Any]) -> Dict[str, Any]:
         """Add Phase 1B targeted pattern enhancements"""
         
-        # Conservative: Only enhance if Phase 1A already found medium+ risk
-        if phase_1a_result['risk_level'] in ['safe', 'low']:
+        # Balanced: Allow enhancement on low risk with high-confidence patterns
+        # Still skip truly safe code to maintain false positive protection
+        if phase_1a_result['risk_level'] == 'safe' and phase_1a_result['risk_score'] < 0.5:
             return phase_1a_result
         
         # Detect advanced patterns
@@ -290,10 +290,10 @@ class Phase1BEnhancedScanner(ConservativeEnhancedSecurityScanner):
         if not advanced_detections:
             return phase_1a_result
         
-        # Very strict filtering for false positive prevention
+        # Balanced filtering: Allow more patterns while maintaining quality
         high_confidence_detections = [
             d for d in advanced_detections 
-            if d['confidence'] >= 0.85 and d['final_risk_score'] >= 6.5  # Stricter thresholds
+            if d['confidence'] >= 0.75 and d['final_risk_score'] >= 5.0  # Balanced thresholds
         ]
         
         if not high_confidence_detections:
@@ -307,8 +307,8 @@ class Phase1BEnhancedScanner(ConservativeEnhancedSecurityScanner):
         # Calculate risk enhancement
         total_phase_1b_risk = sum(d['final_risk_score'] * d['confidence'] * 0.3 for d in high_confidence_detections)
         
-        # Apply conservative enhancement (max 80% increase over Phase 1A)
-        max_enhancement = phase_1a_result['risk_score'] * 0.8
+        # Apply balanced enhancement (max 50% increase for meaningful impact)
+        max_enhancement = max(phase_1a_result['risk_score'] * 0.5, 3.0)  # At least 3.0 boost
         actual_enhancement = min(total_phase_1b_risk, max_enhancement)
         
         enhanced_result.update({
