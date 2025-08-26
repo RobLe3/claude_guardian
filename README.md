@@ -1,79 +1,79 @@
 # Claude Guardian
 
-**Version: v2.0.0-alpha** | **Status: Production Ready** | **API: v2.0**
+**Version: v2.0.0-alpha** | **Status: Development** | **API: v2.0**
 
-**Claude Guardian** is a production-ready AI-powered security system designed to protect Claude Code and development environments from malicious coding techniques, resource hijacking, and repository damage through real-time threat detection, vector-graph correlation analysis, and intelligent security response.
-
----
-
-## 🎯 **Current Status: Production Ready**
-
-✅ **FastAPI Application** - Complete v2.0 out-of-the-box implementation  
-✅ **Multi-Database Architecture** - PostgreSQL, Qdrant, Redis with persistence  
-✅ **Sub-6ms Response Times** - Exceptional performance with 100% accuracy  
-✅ **Claude Code Integration** - 5 security tools via MCP protocol  
+**Claude Guardian** is a security pattern detection tool for Claude Code that scans for potentially malicious code patterns using rule-based detection. It provides MCP integration for real-time security scanning of code submitted to Claude Code.
 
 ---
 
-## 🚀 **Verified Capabilities**
+## 🎯 **Current Status: Development**
 
-### 🛡️ **Real-Time Threat Detection**
-- **Code Injection Protection**: Enhanced context-aware detection for eval(), exec(), system() attacks
-- **Multi-vector Analysis**: Identifies attack chains across different techniques
-- **Context Analysis**: Distinguishes between threats in executable code vs safe contexts (comments, strings)
-- **Intent Classification**: Code purpose detection (configuration, testing, documentation) for accurate risk assessment
+✅ **FastAPI Application** - Basic HTTP server implementation  
+✅ **PostgreSQL Database** - Simple data storage for audit logs  
+✅ **Real-time Pattern Detection** - Rule-based security scanning  
+✅ **Claude Code Integration** - MCP protocol implementation  
 
-**v2.0 Performance Metrics:**
-- Response Time: 5.5ms average (40% faster than v1.x)
-- Detection Accuracy: 100% on all test vectors
-- False Positive Rate: 0% maintained
-- Threat Detection: 25+ patterns across 5 categories
+---
 
-### 🧠 **Vector-Graph Intelligence**
-- **Pattern Correlation**: Maps 16+ attack patterns with relationship analysis
-- **Similarity Detection**: Vector embeddings find attack variants
-- **Attack Chain Analysis**: Graph relationships reveal multi-stage threats
-- **Mitigation Mapping**: 13 proven mitigation strategies with effectiveness scoring
+## 🚀 **Actual Capabilities**
 
-**Enterprise Architecture:**
-- Multi-Database Persistence: 64MB total storage
-- Concurrent Support: 100+ developers simultaneously
-- Container Architecture: Standardized claude-guardian-* naming
-- LightRAG Integration: 4 active collections with semantic search
+### 🛡️ **Pattern-based Threat Detection**
+- **Basic Code Injection Detection**: Simple regex patterns for eval(), exec(), system() calls
+- **SQL Injection Patterns**: Basic detection of common SQL injection attempts
+- **Path Traversal Detection**: Simple patterns for directory traversal attempts
+- **Command Injection**: Basic detection of shell command injection patterns
+
+**Current Implementation:**
+- Detection Method: Regular expression pattern matching
+- Pattern Count: Basic security patterns implemented
+- Response Format: JSON results via REST API
+- Integration: MCP protocol for Claude Code
+
+### 🔧 **Technical Implementation**
+- **Pattern Storage**: Simple in-memory pattern definitions
+- **Scanning Engine**: Synchronous text pattern matching
+- **Result Processing**: Basic threat level classification
+- **Logging**: Simple audit trail to PostgreSQL database
+
+**Architecture:**
+- Database: Single PostgreSQL instance for audit logs
+- Containerization: Docker support for deployment
+- API: REST endpoints for security scanning
+- MCP Integration: HTTP-based protocol server
 
 ### 🔗 **MCP Protocol Integration**
-- **WebSocket Server**: Real-time communication with Claude Code
-- **5 Security Tools**: Available for immediate integration
-- **Protocol Compliance**: Full MCP 2024-11-05 specification support
-- **Multi-Session Support**: Concurrent Claude Code instances supported
+- **HTTP Server**: Basic MCP protocol implementation
+- **Security Tools**: Code scanning functionality via MCP tools
+- **Protocol Support**: Compatible with Claude Code MCP interface
+- **Single Session**: Basic request/response handling
 
-**MCP Integration v2.0:**
-- HTTP-based MCP Server: Port 8083
-- Tool Availability: 5/5 security tools operational
-- Real-time Analysis: <6ms response time (95% faster)
-- JSON Response Format: Claude Code compatible
+**MCP Integration Details:**
+- HTTP Server: Running on configurable port
+- Tool Availability: Basic security scanning tools
+- Response Format: JSON compatible with Claude Code
+- Integration: Standard MCP protocol implementation
 
 ### 🗄️ **Data Architecture**
-- **Qdrant Vector Database**: Semantic search and pattern storage
-- **PostgreSQL**: Audit logs, policies, and structured data
-- **Docker Deployment**: Production-ready container orchestration
-- **Persistent Storage**: Data survives container restarts
+- **PostgreSQL**: Simple database for audit logs and scan results
+- **Docker Deployment**: Basic containerized deployment
+- **Persistent Storage**: Database data persisted via Docker volumes
+- **Configuration**: Environment-based configuration management
 
 ---
 
-## 📊 **Measured Security Improvements**
+## 📊 **Current Functionality**
 
-### **Claude Guardian v2.0 Capabilities:**
-- **Ultra-Fast Analysis**: 5.5ms average response time
-- **Perfect Detection**: 100% accuracy on security test vectors
-- **Zero False Positives**: Maintained 0% false positive rate
-- **Production Scale**: Supports enterprise development teams
+### **Claude Guardian Implementation:**
+- **Basic Pattern Matching**: Simple regex-based detection
+- **Common Threats**: Detection of well-known attack patterns
+- **False Positives**: May occur with legitimate code patterns
+- **Development Tool**: Suitable for development environment security
 
-### **Circumvention Resistance: 100%**
-✅ **Obfuscation Techniques**: All tested methods detected  
-✅ **Encoding Attacks**: Base64, hex, unicode variations caught  
-✅ **Polymorphic Code**: Dynamic construction patterns identified  
-✅ **Multi-stage Injection**: Complex attack chains recognized  
+### **Detection Coverage:**
+✅ **Basic Code Injection**: Simple eval(), exec(), system() patterns  
+✅ **SQL Injection**: Common SQL injection string patterns  
+✅ **Path Traversal**: Simple directory traversal attempts  
+⚠️ **Complex Attacks**: Limited detection of sophisticated threats  
 
 ---
 
@@ -81,6 +81,7 @@
 
 **⚡ 5-Minute Setup:** See [QUICKSTART.md](QUICKSTART.md) for complete installation guide.
 **🔗 Claude Code:** See [CLAUDE_CODE_INTEGRATION.md](CLAUDE_CODE_INTEGRATION.md) for MCP setup.
+**📋 API Documentation:** See [API.md](API.md) for complete API reference and endpoints.
 
 ### **One-Command Setup**
 
@@ -106,54 +107,47 @@ cp claude-code-mcp-config.json ~/.claude-code/mcp/
 {
   "name": "claude-guardian",
   "command": "python3",
-  "args": ["src.iff_guardian.main:app", "--host", "0.0.0.0", "--port", "8083"]
+  "args": ["src.claude_guardian.main:app", "--host", "0.0.0.0", "--port", "8083"]
 }
 ```
 
-**✅ Ready!** Claude Code now has 5 security tools for real-time protection.
+**✅ Ready!** Claude Code now has basic security scanning tools available.
 
 ---
 
 ## 📚 **Architecture**
 
-### **Microservices Stack**
+### **Simple Architecture**
 ```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│ Claude Code │    │ Web Client  │    │ Third-party │
-└──────┬──────┘    └──────┬──────┘    └──────┬──────┘
-       │                  │                  │
-   MCP │                  │ HTTP             │ API
-       │                  │                  │
-       └──────────────────┼──────────────────┘
-                          │
-          ┌───────────────┴───────────────┐
-          │     FastAPI Application       │
-          │    (Python + HTTP/WebSocket)  │
-          └───────────────┬───────────────┘
-                          │
-          ┌───────────────┼───────────────┐
-          │               │               │
-    ┌─────┴─────┐  ┌─────┴─────┐  ┌─────┴─────┐
-    │ Security  │  │   MCP     │  │ Database  │
-    │ Manager   │  │ Protocol  │  │ Manager   │
-    └─────┬─────┘  └─────┬─────┘  └─────┬─────┘
-          │              │              │
-          └──────────────┼──────────────┘
-                         │
-        ┌────────────────┴────────────────┐
-        │     Multi-Database Layer        │
-        │ PostgreSQL + Qdrant + Redis     │
-        │    + LightRAG Integration       │
-        └─────────────────────────────────┘
+┌─────────────┐
+│ Claude Code │
+└──────┬──────┘
+       │
+   MCP │ Protocol
+       │
+┌──────┴──────┐
+│ MCP Server  │
+│ (FastAPI)   │
+└──────┬──────┘
+       │
+┌──────┴──────┐
+│ Security    │
+│ Scanner     │
+└──────┬──────┘
+       │
+┌──────┴──────┐
+│ PostgreSQL  │
+│ Database    │
+└─────────────┘
 ```
 
-### **v2.0 Core Components**
-- **FastAPI Application**: Complete HTTP-based MCP server with sub-6ms response times
-- **Security Manager**: 25+ threat patterns across 5 categories with ML analysis
-- **Multi-Database Architecture**: PostgreSQL (audit), Qdrant (vectors), Redis (cache)
-- **LightRAG Integration**: 4 active collections for semantic threat intelligence
-- **Database Manager**: Persistent storage with health monitoring and auto-recovery
-- **MCP Protocol Layer**: Full HTTP-based integration with Claude Code
+### **Core Components**
+- **FastAPI Application**: HTTP server implementing MCP protocol
+- **Security Scanner**: Basic pattern matching for threat detection
+- **PostgreSQL Database**: Simple storage for audit logs and results
+- **Pattern Engine**: Regex-based detection of common security threats
+- **MCP Protocol Layer**: Basic HTTP-based integration with Claude Code
+- **Configuration Manager**: Environment-based application configuration
 
 ---
 
@@ -161,120 +155,118 @@ cp claude-code-mcp-config.json ~/.claude-code/mcp/
 
 ### **Environment Setup**
 ```bash
-# v2.0 Environment Configuration
+# Basic Environment Configuration
 POSTGRES_DB=claude_guardian
 POSTGRES_USER=cguser
 POSTGRES_PASSWORD=your_secure_password
-QDRANT_DATA_PATH=./data/qdrant
 POSTGRES_DATA_PATH=./data/postgres
-REDIS_DATA_PATH=./data/redis
-EMBEDDING_MODEL=all-MiniLM-L6-v2
-ENABLE_MONITORING=true
+MCP_SERVER_PORT=8083
+LOG_LEVEL=INFO
 ```
 
-### **Security Policies**
+### **Detection Patterns**
 ```yaml
-# Threat detection levels
-detection:
-  code_injection: 9/10    # Critical
-  sql_injection: 10/10    # Critical  
-  path_traversal: 8/10    # High
-  xss_attacks: 7/10       # High
-  command_injection: 9/10 # Critical
+# Basic pattern matching for common threats
+patterns:
+  code_injection: ["eval(", "exec(", "system("]
+  sql_injection: ["' OR '1'='1", "UNION SELECT", "DROP TABLE"]
+  path_traversal: ["../", "..\\", "/..", "\\..""] 
+  command_injection: ["|", "&&", ";", "`", "$("]
 
-# Mitigation strategies
-mitigations:
-  input_validation: 87% effectiveness
-  sandboxing: 92% effectiveness  
-  prepared_statements: 98% effectiveness
-  output_encoding: 90% effectiveness
+# Detection configuration
+settings:
+  case_sensitive: false
+  regex_enabled: true
+  logging_enabled: true
 ```
 
 ---
 
 ## 🧪 **Testing & Validation**
 
-### **Comprehensive Test Suite**
+### **Basic Testing**
 ```bash
-# v2.0 Comprehensive Benchmark Suite
-python3 benchmark-suite.py
-# Result: A+ grades across all metrics
+# Run basic tests
+python3 -m pytest tests/
+# Basic unit tests for pattern matching
 
-# Quick rebenchmark test
-python3 rebench.py  
-# Result: 5.5ms average, 100% accuracy, A+ performance
-
-# Health and integration check
+# Health check
 curl http://localhost:8083/health
-# Result: All services healthy, 64MB persistent storage
+# Simple health status endpoint
 
-# MCP tools validation
+# MCP tools check
 curl http://localhost:8083/api/v1/mcp/tools
-# Result: 5/5 tools available and operational
+# List available MCP tools
 ```
 
-### **v2.0 Benchmark Results**
-- **Response Time Performance**: ✅ 5.5ms average (A+ grade)
-- **Detection Accuracy**: ✅ 100% on all test vectors (A+ grade)
-- **System Reliability**: ✅ 100% uptime during testing (A+ grade)
-- **Database Persistence**: ✅ 64MB multi-database storage
-- **MCP Integration**: ✅ 5/5 tools operational via HTTP protocol
+### **Current Status**
+- **Pattern Matching**: ✅ Basic regex patterns working
+- **Database Connection**: ✅ PostgreSQL connectivity functional
+- **MCP Integration**: ✅ Basic MCP protocol implementation
+- **Docker Deployment**: ✅ Container setup working
+- **API Endpoints**: ✅ REST API responding to requests
 
 ---
 
 ## ⚠️ **Current Limitations**
 
-### **Known Constraints**
-- **Command Injection Detection**: Requires refinement for complex string concatenation patterns
-- **Comment Structure Parsing**: Limited support for complex multi-line comment formats
-- **Language Coverage**: Optimized for Python, JavaScript, SQL patterns
-- **Performance**: Vector search optimized for <1000 patterns
+### **Implementation Constraints**
+- **Detection Method**: Only basic regex pattern matching (no AI/ML)
+- **False Positives**: May flag legitimate code that matches patterns
+- **Sophistication**: Cannot detect advanced or obfuscated attacks
+- **Context Awareness**: Limited understanding of code context
+- **Language Support**: Basic patterns for common languages only
 
-### **Not Yet Implemented**
-- ❌ Machine learning model training pipeline
+### **NOT Implemented**
+- ❌ Machine learning or AI-based analysis
+- ❌ Vector database (Qdrant) integration
+- ❌ LightRAG or semantic search capabilities
 - ❌ Advanced behavioral analysis
-- ❌ Custom rule engine UI
-- ❌ SIEM integration connectors
-- ❌ Automated model retraining
+- ❌ Complex attack chain detection
+- ❌ Real-time threat intelligence feeds
+- ❌ Enterprise-grade scalability features
+- ❌ Advanced reporting and analytics
+- ❌ Custom rule engine or UI
+- ❌ SIEM integration
 
 ### **Resource Requirements**
-- **Minimum**: 4GB RAM, 20GB storage
-- **Recommended**: 8GB RAM, 100GB SSD
-- **Production**: 16GB RAM, 200GB SSD, dedicated vector DB
+- **Minimum**: 2GB RAM, 5GB storage
+- **Recommended**: 4GB RAM, 10GB storage
+- **Docker**: Single container deployment only
 
 ---
 
 ## 🎯 **Development Maturity & Future Direction**
 
-### **Current Achievement Level: Complete Advanced Security System (v1.3.1)**
+### **Current Achievement Level: Basic Security Scanner**
 
-**What We've Built:**
-- ✅ **Multi-Layered Detection Engine**: Context-aware patterns + data flow analysis (91.7% accuracy, 0% false positives)
-- ✅ **Advanced Threat Analysis**: Hybrid patterns with context requirements and flow detection
-- ✅ **Vector-Graph Intelligence System**: 100% operational with integrated threat analysis
-- ✅ **Full MCP Integration**: 5 security tools ready for Claude Code
-- ✅ **Production Docker Stack**: Complete containerized deployment
-- ✅ **Comprehensive Documentation**: Complete evolution tracking and deployment guides
+**What We've Actually Built:**
+- ✅ **Simple Pattern Detection**: Basic regex matching for common threats
+- ✅ **MCP Integration**: Working protocol implementation for Claude Code
+- ✅ **Database Storage**: PostgreSQL for basic audit logging
+- ✅ **Docker Deployment**: Containerized application setup
+- ✅ **REST API**: Basic HTTP endpoints for scanning functionality
+- ✅ **Documentation**: Clear setup and usage instructions
 
 ### **Where We're Heading**
 
-**Core Enhancement Opportunities:**
-- **Command Injection Refinement**: Improve detection of complex string concatenation attacks
-- **AST-based Analysis**: Implement Python AST parsing for deeper code understanding
-- **ML Integration**: Replace hash-based embeddings with semantic ML models
-- **Language Expansion**: Extend beyond Python/JavaScript to Go, Java, C++ pattern detection
+**Potential Improvements:**
+- **Pattern Refinement**: Improve accuracy and reduce false positives
+- **Context Analysis**: Add basic code context understanding
+- **Language Support**: Expand patterns for more programming languages
+- **Performance**: Optimize scanning speed for larger codebases
 
-**Enterprise Evolution Ideas:**
-- **SIEM Connectors**: Integration with popular security platforms (Splunk, QRadar)
-- **Behavioral Analytics**: User pattern recognition and anomaly detection
-- **Custom Rule Engine**: User-defined detection policies and responses
-- **Multi-tenant Architecture**: Support for organizational isolation
+**Possible Future Features:**
+- **Machine Learning**: Implement ML-based threat detection
+- **Vector Search**: Add semantic similarity detection
+- **Advanced Analysis**: AST-based code analysis
+- **Custom Rules**: User-configurable detection patterns
 
-**Advanced Capabilities:**
-- **Zero-day Detection**: Anomaly-based identification of unknown threats
-- **Automated Response**: Intelligent containment and mitigation workflows
-- **Threat Intelligence**: External feed integration for broader context
-- **Compliance Reporting**: SOC 2, ISO 27001 automated documentation
+**Integration Ideas:**
+- **IDE Plugins**: Real-time scanning in development environments
+- **CI/CD Integration**: Automated security checks in build pipelines
+- **Reporting**: Enhanced logging and threat analysis reports
+- **Configuration**: Web UI for pattern management
 
 ### **Community & Support Welcome**
 
@@ -289,26 +281,26 @@ curl http://localhost:8083/api/v1/mcp/tools
 
 ---
 
-## 📈 **Current Performance & Achievements**
+## 📈 **Current Implementation Status**
 
-### **Verified Security Effectiveness**
-- **Overall Detection Accuracy**: 91.7% across varied code patterns
-- **False Positive Rate**: 0% on legitimate code patterns  
-- **Context Classification**: 100% accuracy for comments, strings, documentation
-- **Vector-Graph Integration**: 100% operational with threat correlation
-- **Intent Recognition**: Accurate classification of code purpose for risk assessment
+### **Pattern Detection Capabilities**
+- **Pattern Coverage**: Basic regex patterns for common threats
+- **Detection Types**: Simple code injection, SQL injection, path traversal
+- **Database Logging**: Basic audit log storage in PostgreSQL
+- **API Integration**: REST endpoints for security scanning
+- **System Monitoring**: Basic health check endpoint
 
-### **Operational Performance**  
-- **Response Time**: <100ms for security scans (95th percentile)
-- **Concurrent Sessions**: 100+ supported simultaneously
-- **System Reliability**: 99.9% uptime in Docker deployment
-- **Resource Efficiency**: <2GB RAM, <10% CPU usage per container
+### **System Performance**  
+- **Response Time**: Variable, depends on input size and pattern complexity
+- **Concurrent Requests**: Basic FastAPI concurrency support
+- **Database Connection**: Simple PostgreSQL connection management
+- **Resource Usage**: Typical for small FastAPI application
 
-### **Integration Maturity**
-- **MCP Protocol**: 100% compliance with Claude Code integration
-- **Tool Discovery**: 5/5 security tools available and functional
-- **Multi-session Support**: 80% concurrent session success rate
-- **Vector-Graph Correlation**: 100% test suite success with integrated threat analysis
+### **Integration Capabilities**
+- **HTTP API**: Basic REST endpoints for MCP protocol
+- **Tool Availability**: Security scanning tools via MCP interface
+- **Session Handling**: Simple request/response processing
+- **Database Logging**: Basic audit trail functionality
 
 ---
 
@@ -316,31 +308,29 @@ curl http://localhost:8083/api/v1/mcp/tools
 
 ### **Development Setup**
 ```bash
-cd /path/to/claude-guardian  # Navigate to your Claude Guardian installation
+cd /path/to/claude_guardian  # Navigate to your Claude Guardian installation
 
 # Install dependencies
 pip install -r requirements.txt
-npm install  # For frontend components
 
 # Run tests
 python -m pytest tests/
-npm test
 
 # Start development environment
-docker-compose -f docker-compose.dev.yml up -d
+docker compose up -d
 ```
 
 ### **Contribution Guidelines**
-- **Code Quality**: Maintain >80% test coverage
-- **Documentation**: Update README for feature changes
-- **Security**: All code must pass security scanning
-- **Performance**: No degradation in core metrics
+- **Code Quality**: Write tests for new functionality
+- **Documentation**: Update README and comments for changes
+- **Security**: Follow basic security practices
+- **Functionality**: Ensure changes don't break existing features
 
 ---
 
 ## 📄 **Version & License**
 
-**Current Version**: v2.0.0-alpha (Enterprise Security Platform)  
+**Current Version**: v2.0.0-alpha (Basic Security Scanner)  
 **API Version**: v2.0 (FastAPI-based with HTTP MCP protocol)  
 **Release Date**: August 26, 2025  
 
@@ -354,12 +344,12 @@ Copyright (c) 2025 Claude Guardian Team
 
 ## 🎉 **Acknowledgments**
 
-- **Vector Database**: Powered by Qdrant for semantic search and pattern correlation
-- **LightRAG**: Lightweight RAG implementation for intelligent information retrieval
-- **Graph Analysis**: NetworkX for testing relationship analysis (development/testing only)
-- **Container Orchestration**: Docker for production deployment
-- **Protocol Integration**: MCP 2024-11-05 specification compliance
-- **Testing Framework**: Comprehensive validation suite with 5 test modules
+- **Database Layer**: PostgreSQL for basic data storage and logging
+- **Pattern Engine**: Simple regex-based pattern matching
+- **Web Framework**: FastAPI for HTTP server implementation
+- **Container Support**: Docker for application deployment
+- **Protocol Integration**: Basic MCP protocol implementation
+- **Development Tools**: Testing framework and development utilities
 
 ---
 
@@ -369,8 +359,8 @@ Copyright (c) 2025 Claude Guardian Team
 
 **[Local Documentation](docs/)** • **[Issues](../../issues)** • **[Source Code](./)**
 
-[![Production Ready](https://img.shields.io/badge/Production-Ready-green.svg)](#-current-status-production-ready)
-[![Detection Accuracy](https://img.shields.io/badge/Detection%20Accuracy-91.7%25-brightgreen.svg)](#-measured-security-improvements)
+[![Development Status](https://img.shields.io/badge/Status-Development-yellow.svg)](#-current-status-development)
+[![Basic Patterns](https://img.shields.io/badge/Detection-Basic%20Patterns-orange.svg)](#-current-functionality)
 [![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-blue.svg)](#-mcp-protocol-integration)
 [![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](#-quick-start)
 
