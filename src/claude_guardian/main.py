@@ -174,7 +174,7 @@ def main():
     logger.info(f"🐛 Debug mode: {settings.service.debug}")
     
     uvicorn.run(
-        "iff_guardian.main:app",
+        "claude_guardian.main:app",
         host=settings.service.host,
         port=settings.service.port,
         workers=1 if settings.service.debug else settings.service.workers,

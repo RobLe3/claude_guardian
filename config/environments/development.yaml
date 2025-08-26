@@ -1,7 +1,7 @@
 # Development Environment Configuration
 
 app:
-  name: "IFF-Guardian"
+  name: "Claude Guardian"
   environment: "development"
   debug: true
   reload: true
@@ -16,7 +16,7 @@ server:
   keep_alive: 2
 
 database:
-  url: "postgresql+asyncpg://dev_user:dev_password@localhost:5432/iff_guardian_dev"
+  url: "postgresql+asyncpg://dev_user:dev_password@localhost:5432/claude_guardian_dev"
   pool_size: 5
   max_overflow: 10
   echo: true
@@ -107,7 +107,7 @@ celery:
   task_acks_late: true
 
 testing:
-  database_url: "postgresql+asyncpg://test:test@localhost:5432/test_iff_guardian"
+  database_url: "postgresql+asyncpg://test:test@localhost:5432/test_claude_guardian"
   redis_url: "redis://localhost:6379/15"
   cleanup_after_tests: true
   mock_external_apis: true

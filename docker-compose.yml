@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: claude_guardian
       POSTGRES_USER: cguser
-      POSTGRES_PASSWORD: secure_password_123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your_secure_password}
     ports:
       - "5432:5432"
     volumes:
@@ -52,9 +52,9 @@ services:
       - "6379:6379"
     volumes:
       - ./data/redis:/data
-    command: redis-server --appendonly yes --requirepass redis_password_123
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-your_redis_password}
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "redis_password_123", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-your_redis_password}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -69,9 +69,9 @@ services:
     ports:
       - "8083:8083"
     environment:
-      DATABASE_URL: postgresql://cguser:secure_password_123@claude-guardian-postgres:5432/claude_guardian
+      DATABASE_URL: postgresql://cguser:${POSTGRES_PASSWORD:-your_secure_password}@claude-guardian-postgres:5432/claude_guardian
       QDRANT_URL: http://claude-guardian-qdrant:6333
-      REDIS_URL: redis://:redis_password_123@claude-guardian-redis:6379/0
+      REDIS_URL: redis://:${REDIS_PASSWORD:-your_redis_password}@claude-guardian-redis:6379/0
       HOST: 0.0.0.0
       PORT: 8083
       ENVIRONMENT: production

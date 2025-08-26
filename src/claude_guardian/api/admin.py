@@ -271,7 +271,7 @@ async def get_recent_logs(
             }
         ],
         "total_lines": 1,
-        "note": "Log integration pending - check /tmp/iff-guardian-v2.log"
+        "note": "Log integration pending - check /tmp/claude-guardian-v2.log"
     }
 
 
@@ -292,23 +292,23 @@ async def prometheus_metrics():
     """Export metrics in Prometheus format"""
     # Placeholder for Prometheus metrics
     metrics = """
-# HELP iff_guardian_requests_total Total number of requests
-# TYPE iff_guardian_requests_total counter
-iff_guardian_requests_total 100
+# HELP claude_guardian_requests_total Total number of requests
+# TYPE claude_guardian_requests_total counter
+claude_guardian_requests_total 100
 
-# HELP iff_guardian_scan_duration_seconds Duration of security scans
-# TYPE iff_guardian_scan_duration_seconds histogram
-iff_guardian_scan_duration_seconds_bucket{le="0.1"} 50
-iff_guardian_scan_duration_seconds_bucket{le="0.5"} 80
-iff_guardian_scan_duration_seconds_bucket{le="1.0"} 95
-iff_guardian_scan_duration_seconds_bucket{le="+Inf"} 100
+# HELP claude_guardian_scan_duration_seconds Duration of security scans
+# TYPE claude_guardian_scan_duration_seconds histogram
+claude_guardian_scan_duration_seconds_bucket{le="0.1"} 50
+claude_guardian_scan_duration_seconds_bucket{le="0.5"} 80
+claude_guardian_scan_duration_seconds_bucket{le="1.0"} 95
+claude_guardian_scan_duration_seconds_bucket{le="+Inf"} 100
 
-# HELP iff_guardian_threats_detected_total Total number of threats detected
-# TYPE iff_guardian_threats_detected_total counter
-iff_guardian_threats_detected_total{severity="low"} 25
-iff_guardian_threats_detected_total{severity="medium"} 10
-iff_guardian_threats_detected_total{severity="high"} 3
-iff_guardian_threats_detected_total{severity="critical"} 1
+# HELP claude_guardian_threats_detected_total Total number of threats detected
+# TYPE claude_guardian_threats_detected_total counter
+claude_guardian_threats_detected_total{severity="low"} 25
+claude_guardian_threats_detected_total{severity="medium"} 10
+claude_guardian_threats_detected_total{severity="high"} 3
+claude_guardian_threats_detected_total{severity="critical"} 1
 """
     
     return {"metrics": metrics, "format": "prometheus", "note": "Real metrics implementation pending"}

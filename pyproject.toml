@@ -3,14 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "iff-guardian"
+name = "claude-guardian"
 dynamic = ["version"]
-description = "IFF-Guardian: Advanced threat detection and response system"
+description = "Claude Guardian: Advanced threat detection and response system"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
 authors = [
-    { name = "IFF-Guardian Team", email = "team@iff-guardian.com" },
+    { name = "Claude Guardian Team", email = "team@claude-guardian.com" },
 ]
 keywords = [
     "security",
@@ -76,18 +76,18 @@ test = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/iff-guardian/iff-guardian"
-Documentation = "https://docs.iff-guardian.com"
-Repository = "https://github.com/iff-guardian/iff-guardian.git"
-"Bug Tracker" = "https://github.com/iff-guardian/iff-guardian/issues"
-Changelog = "https://github.com/iff-guardian/iff-guardian/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/claude-guardian/claude-guardian"
+Documentation = "https://docs.claude-guardian.com"
+Repository = "https://github.com/claude-guardian/claude-guardian.git"
+"Bug Tracker" = "https://github.com/claude-guardian/claude-guardian/issues"
+Changelog = "https://github.com/claude-guardian/claude-guardian/blob/main/CHANGELOG.md"
 
 [project.scripts]
-iff-guardian = "iff_guardian.cli.main:app"
-iffg = "iff_guardian.cli.main:app"
+claude-guardian = "claude_guardian.cli.main:app"
+claude-guardian-cli = "claude_guardian.cli.main:app"
 
 [tool.hatch.version]
-path = "src/iff_guardian/__init__.py"
+path = "src/claude_guardian/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -100,7 +100,7 @@ include = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/iff_guardian"]
+packages = ["src/claude_guardian"]
 
 # Black configuration
 [tool.black]
@@ -130,7 +130,7 @@ exclude = '''
 profile = "black"
 multi_line_output = 3
 line_length = 88
-known_first_party = ["iff_guardian"]
+known_first_party = ["claude_guardian"]
 known_third_party = ["fastapi", "pydantic", "sqlalchemy"]
 
 # pytest configuration
@@ -139,7 +139,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = [
-    "--cov=src/iff_guardian",
+    "--cov=src/claude_guardian",
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",

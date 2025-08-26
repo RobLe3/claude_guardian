@@ -1,7 +1,7 @@
 # Staging Environment Configuration
 
 app:
-  name: "IFF-Guardian"
+  name: "Claude Guardian"
   environment: "staging"
   debug: false
   reload: false
@@ -44,8 +44,8 @@ security:
 
 cors:
   origins:
-    - "https://staging.iff-guardian.com"
-    - "https://staging-admin.iff-guardian.com"
+    - "https://staging.claude-guardian.com"
+    - "https://staging-admin.claude-guardian.com"
   credentials: true
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
   headers: ["Authorization", "Content-Type", "X-Requested-With"]
@@ -58,7 +58,7 @@ logging:
       level: "INFO"
     - type: "file"
       level: "WARNING"
-      filename: "/var/log/iff-guardian/staging.log"
+      filename: "/var/log/claude-guardian/staging.log"
       max_bytes: 52428800  # 50MB
       backup_count: 10
 
@@ -108,8 +108,8 @@ celery:
   worker_prefetch_multiplier: 4
   task_acks_late: true
   task_routes:
-    "iff_guardian.tasks.heavy_computation": {"queue": "heavy"}
-    "iff_guardian.tasks.notifications": {"queue": "notifications"}
+    "claude_guardian.tasks.heavy_computation": {"queue": "heavy"}
+    "claude_guardian.tasks.notifications": {"queue": "notifications"}
 
 email:
   smtp_host: "${SMTP_HOST}"
