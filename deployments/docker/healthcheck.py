@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Health check script for IFF-Guardian Docker container.
+Health check script for Claude Guardian Docker container.
 This script performs comprehensive health checks including:
 - Application responsiveness
 - Database connectivity
@@ -141,8 +141,8 @@ class HealthChecker:
     def check_file_permissions(self) -> Dict[str, Any]:
         """Check critical file and directory permissions."""
         critical_paths = [
-            '/var/log/iff-guardian',
-            '/var/lib/iff-guardian',
+            '/var/log/claude-guardian',
+            '/var/lib/claude-guardian',
             '/tmp/uploads'
         ]
         
