@@ -36,11 +36,13 @@ Based on our development evolution, here's the proposed semantic versioning:
 - Documentation updates
 - No new major features
 
-#### **v2.0.0 - Machine Learning Integration (Future)**
-- Major architectural change
-- ML-based pattern learning
-- Breaking changes to API
-- Advanced anomaly detection
+#### **v2.0.0-alpha - FastAPI Enterprise Platform (RELEASED)**
+- **Release Date**: August 26, 2025
+- **Major architectural change**: WebSocket MCP → HTTP-based MCP protocol
+- **Complete FastAPI application**: Sub-6ms response times with A+ performance
+- **Multi-database architecture**: PostgreSQL + Qdrant + Redis with persistence
+- **Breaking changes**: New HTTP MCP endpoints, enhanced security manager
+- **Enterprise features**: LightRAG integration, comprehensive benchmarking
 
 #### **v2.1.0 - Advanced Flow Analysis (Future)**  
 - Inter-procedural flow analysis
