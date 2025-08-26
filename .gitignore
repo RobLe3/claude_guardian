@@ -148,3 +148,25 @@ yarn-error.log*
 dmypy.json
 .pyre/
 .pytype/
+
+# Local database data directories (preserve locally, exclude from repo)
+deployments/production/data/
+src/data/
+
+# Personal Claude settings (local configuration)
+.claude/
+settings.local*.json
+
+# Outdated Docker compose files (historical but not for repo)
+docker-compose.minimal.yml
+docker-compose.simple.yml
+docker-compose\ 2.yml
+
+# Go service placeholders (may not be functional in v2.0.0-alpha)
+cmd/
+internal/
+pkg/
+
+# Additional local artifacts
+*.local
+.local/
