@@ -1,9 +1,9 @@
 # Claude Guardian - Project Structure
 
 **Project:** Claude Guardian - AI-Powered Security System  
-**Version:** v1.3.1 (Complete Advanced Security System)  
-**API Version:** v1.3 (Backward compatible with v1.0+)  
-**Date:** August 25, 2025
+**Version:** v2.0.0-alpha (FastAPI Enterprise Platform)  
+**API Version:** v2.0 (HTTP-based MCP protocol)  
+**Date:** August 26, 2025
 
 ---
 

@@ -1,0 +1,8 @@
+{
+  "name": "claude-guardian",
+  "command": "python3",
+  "args": ["/Users/roble/Documents/Python/IFF/scripts/start-mcp-service.py", "--port", "8083"],
+  "env": {
+    "GUARDIAN_MODE": "production"
+  }
+}

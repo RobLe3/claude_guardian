@@ -1,0 +1,34 @@
+{
+  "name": "claude-guardian",
+  "description": "Enterprise security platform for Claude Code - comprehensive threat analysis and vulnerability detection",
+  "version": "2.0.0-alpha",
+  "type": "http",
+  "baseUrl": "http://localhost:8083/api/v1/mcp",
+  "endpoints": {
+    "tools": "/tools",
+    "security_scan": "/scan/security",
+    "dependency_scan": "/scan/dependencies",
+    "network_analysis": "/analyze/network",
+    "permission_audit": "/audit/permissions",
+    "secret_detection": "/detect/secrets"
+  },
+  "capabilities": [
+    "code_security_analysis",
+    "vulnerability_detection",
+    "threat_analysis",
+    "secret_scanning",
+    "dependency_auditing",
+    "network_configuration_review",
+    "permission_auditing"
+  ],
+  "security_features": {
+    "threat_patterns": 25,
+    "detection_methods": ["pattern_matching", "ml_analysis", "vector_search"],
+    "supported_languages": ["javascript", "python", "java", "go", "sql", "bash"],
+    "database_integration": {
+      "postgresql": "audit_logs",
+      "qdrant": "threat_vectors",
+      "redis": "session_cache"
+    }
+  }
+}

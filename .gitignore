@@ -105,9 +105,46 @@ grafana_data/
 backup/
 backups/
 
-# Development documentation and artifacts
-dev-docs/
-dev-scripts/
-dev-logs/
-dev-legacy/
-EOF < /dev/null
+# Development artifacts (now organized in dev-archives)
+dev-archives/logs/*.log
+dev-archives/benchmarks/claude-guardian-benchmark-*.json
+
+# Process ID files
+.mcp_pid
+.guardian_pid
+
+# Benchmark and test results
+rebench_results.json
+benchmark_*.json
+test_results.json
+
+# Runtime logs
+/tmp/claude-guardian-*.log
+/tmp/iff-guardian-*.log
+
+# FastAPI generated files
+.pytest_cache/
+htmlcov/
+.coverage
+.tox/
+
+# MCP configuration (contains paths)
+claude-code-mcp-config.json.local
+
+# Development scripts working files
+*.tmp
+correlation-test-*.json
+test-output-*.txt
+
+# Node modules if any frontend is added
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Additional Python artifacts
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
