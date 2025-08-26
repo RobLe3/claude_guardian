@@ -170,3 +170,7 @@ pkg/
 # Additional local artifacts
 *.local
 .local/
+
+# Development archives (organized historical code)
+# These directories contain preserved code for reference
+# but are not part of active v2.0.0-alpha codebase
