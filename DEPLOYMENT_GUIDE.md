@@ -1,6 +1,6 @@
 # Claude Guardian v2.0.0-alpha - Deployment Guide
 
-This guide provides step-by-step instructions for deploying Claude Guardian v2.0.0-alpha with its complete FastAPI enterprise platform and multi-database architecture.
+This guide provides step-by-step instructions for deploying Claude Guardian v2.0.0-alpha, a FastAPI-based security scanner with MCP integration for Claude Code.
 
 ---
 
@@ -9,8 +9,8 @@ This guide provides step-by-step instructions for deploying Claude Guardian v2.0
 Before deployment, ensure you have:
 
 - [ ] **Docker & Docker Compose** installed
-- [ ] **8GB+ RAM** available (16GB recommended for production)
-- [ ] **50GB+ storage** available (200GB recommended for production)
+- [ ] **4GB+ RAM** available (sufficient for development and small teams)
+- [ ] **10GB+ storage** available (for database data and application files)
 - [ ] **Python 3.9+** for testing scripts
 - [ ] **Network access** for container pulls
 - [ ] **Admin privileges** for port binding
@@ -45,22 +45,22 @@ POSTGRES_DB=claude_guardian
 POSTGRES_USER=cguser
 POSTGRES_PASSWORD=your_secure_password_here
 
-# v2.0 Multi-Database Persistence
+# Database Data Directories
 QDRANT_DATA_PATH=./data/qdrant
 POSTGRES_DATA_PATH=./data/postgres
 REDIS_DATA_PATH=./data/redis
 
-# AI Configuration
-EMBEDDING_MODEL=all-MiniLM-L6-v2
+# Application Configuration
+# EMBEDDING_MODEL=all-MiniLM-L6-v2  # Optional: for future ML features
 ENABLE_MONITORING=true
 ENABLE_DEBUG_LOGGING=false
 DEVELOPMENT_MODE=false
 ```
 
-### **3. Deploy v2.0 FastAPI Stack**
+### **3. Deploy Claude Guardian Application**
 
 ```bash
-# Use the v2.0 setup script (recommended)
+# Use the setup script (recommended)
 ./setup-v2.sh
 
 # Or manual deployment:
@@ -102,8 +102,8 @@ cd /path/to/claude-guardian
 # Test vector database integration
 python3 scripts/test_full_stack.py
 
-# Test vector-graph correlation
-python3 scripts/test_vector_graph_correlation.py
+# Test pattern detection
+python3 scripts/test_pattern_detection.py
 
 # Test security effectiveness
 python3 scripts/test_security_effectiveness.py
@@ -117,7 +117,7 @@ Claude Guardian v2.0.0-alpha Health Check:
 ✅ PostgreSQL Database: CONNECTED (46MB persistent)
 ✅ Qdrant Vector DB: ACTIVE (4 collections, 18MB)
 ✅ Redis Cache: OPERATIONAL (AOF enabled, 12KB)
-✅ LightRAG Integration: READY (semantic search active)
+✅ Pattern Detection: READY (regex-based scanning active)
 ✅ MCP Tools: 5/5 AVAILABLE
 
 Performance Benchmarks (A+ Grades):
@@ -174,7 +174,7 @@ curl -X POST http://localhost:8083/api/v1/mcp/scan/security \
 
 # Expected output:
 # ✅ 5 security tools operational
-# ✅ Sub-6ms response times
+# ✅ Pattern-based security analysis
 # ✅ 100% detection accuracy
 ```
 
@@ -292,7 +292,7 @@ python3 scripts/test_full_stack.py
 
 ### **Common Issues & Solutions**
 
-**1. Vector Database Connection Failed**
+**1. Database Connection Failed**
 ```bash
 # Check Qdrant status
 curl -s http://localhost:6333/collections
@@ -319,7 +319,7 @@ docker stats --no-stream
 ```bash
 # Optimize Qdrant configuration
 export QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS=8
-# Restart Qdrant container
+# Restart database containers
 ```
 
 ### **Log Analysis**

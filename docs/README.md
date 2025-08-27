@@ -42,7 +42,7 @@
 - PostgreSQL: Audit logs and structured data (46MB persistent)
 - Qdrant: Vector database with 4 active collections (18MB)
 - Redis: Caching and session management (12KB with AOF)
-- LightRAG: Semantic search and threat intelligence
+- Pattern Matching: Regex-based threat detection
 
 ---
 
@@ -83,7 +83,7 @@ pip install -r requirements.txt
 docker compose up -d postgres qdrant redis
 
 # Start Claude Guardian v2.0
-python3 -m uvicorn src.iff_guardian.main:app --host 0.0.0.0 --port 8083
+python3 -m uvicorn src.claude_guardian.main:app --host 0.0.0.0 --port 8000
 ```
 
 ### **Claude Code Integration**
@@ -95,7 +95,7 @@ cp claude-code-mcp-config.json ~/.claude-code/mcp/
 {
   "name": "claude-guardian",
   "command": "python3",
-  "args": ["-m", "uvicorn", "src.iff_guardian.main:app", "--host", "0.0.0.0", "--port", "8083"]
+  "args": ["-m", "uvicorn", "src.claude_guardian.main:app", "--host", "0.0.0.0", "--port", "8000"]
 }
 ```
 
@@ -121,10 +121,10 @@ ENABLE_MONITORING=true
 ```
 
 ### **Key Endpoints**
-- **Health Check**: `http://localhost:8083/health`
-- **API Documentation**: `http://localhost:8083/docs`
-- **MCP Tools**: `http://localhost:8083/api/v1/mcp/tools`
-- **Security Scan**: `http://localhost:8083/api/v1/mcp/scan/security`
+- **Health Check**: `http://localhost:8000/health`
+- **API Documentation**: `http://localhost:8000/docs`
+- **MCP Tools**: `http://localhost:8000/api/v1/mcp/tools`
+- **Security Scan**: `http://localhost:8000/api/v1/mcp/scan/security`
 
 ---
 
@@ -139,16 +139,16 @@ python3 dev-archives/benchmarks/benchmark-suite.py
 python3 dev-archives/benchmarks/rebench.py
 
 # Health verification
-curl http://localhost:8083/health
+curl http://localhost:8000/health
 ```
 
 ### **MCP Integration Test**
 ```bash
 # Test tool discovery
-curl http://localhost:8083/api/v1/mcp/tools
+curl http://localhost:8000/api/v1/mcp/tools
 
 # Test security scanning
-curl -X POST http://localhost:8083/api/v1/mcp/scan/security \
+curl -X POST http://localhost:8000/api/v1/mcp/scan/security \
   -H "Content-Type: application/json" \
   -d '{"code": "SELECT * FROM users WHERE id = '\''1'\'' OR 1=1--", "context": "test"}'
 ```
@@ -165,7 +165,7 @@ curl -X POST http://localhost:8083/api/v1/mcp/scan/security \
                │ HTTP/MCP Protocol
 ┌──────────────┴──────────────────────┐
 │       FastAPI Application           │
-│    (src/iff_guardian/main.py)       │
+│    (src/claude_guardian/main.py)       │
 ├─────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐   │
 │  │  Security   │  │     MCP     │   │
@@ -176,15 +176,15 @@ curl -X POST http://localhost:8083/api/v1/mcp/scan/security \
 ┌──────────────┴──────────────────────┐
 │       Multi-Database Layer          │
 │ PostgreSQL + Qdrant + Redis         │
-│    + LightRAG Integration          │
+│     + Pattern Detection            │
 └─────────────────────────────────────┘
 ```
 
 ### **Core Components**
-- **Security Manager**: 25+ threat detection patterns with ML analysis
+- **Security Manager**: 25+ regex patterns for threat detection
 - **Database Manager**: Multi-database persistence with health monitoring  
 - **MCP Protocol Layer**: HTTP-based Claude Code integration
-- **LightRAG Integration**: Semantic search across 4 collections
+- **Pattern Engine**: Regex-based scanning across threat categories
 
 ---
 
@@ -217,13 +217,13 @@ pip install -r requirements-dev.txt
 pytest tests/
 
 # Start development server
-uvicorn src.iff_guardian.main:app --reload
+uvicorn src.claude_guardian.main:app --reload
 ```
 
 ### **Project Structure**
 ```
 claude_guardian/
-├── src/iff_guardian/          # Main application
+├── src/claude_guardian/          # Main application
 ├── docs/                      # Documentation
 ├── dev-archives/             # Development artifacts
 ├── deployments/              # Docker configurations  
@@ -236,12 +236,12 @@ claude_guardian/
 ## 📞 Support and Resources
 
 ### **Quick Help**
-- **Health Check**: `curl http://localhost:8083/health`
+- **Health Check**: `curl http://localhost:8000/health`
 - **Logs**: `tail -f /tmp/claude-guardian-v2.log`
 - **Process Status**: `cat .guardian_pid`
 
 ### **Common Issues**
-- **Port 8083 in use**: Check with `lsof -i :8083` and kill if needed
+- **Port 8000 in use**: Check with `lsof -i :8000` and kill if needed
 - **Database connection**: Verify Docker containers are running
 - **Permission errors**: Ensure proper file permissions on data/ directory
 

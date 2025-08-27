@@ -14,6 +14,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from .core.config import get_settings, Settings
 from .core.database import DatabaseManager
 from .core.security import SecurityManager
+from .core.dependencies import set_managers
 from .api.mcp import mcp_router
 from .api.security import security_router
 from .api.admin import admin_router
@@ -55,12 +56,9 @@ async def lifespan(app: FastAPI):
     await db_manager.seed_initial_data()
     logger.info("📊 Initial data seeding completed")
     
-    # Set managers in API modules
-    from .api import mcp, security, admin
-    mcp.set_managers(db_manager, security_manager)
-    security.set_managers(db_manager, security_manager)
-    admin.set_managers(db_manager, security_manager)
-    logger.info("🔌 API modules configured with managers")
+    # Set managers in centralized dependency system
+    set_managers(db_manager, security_manager)
+    logger.info("🔌 Dependency system configured with managers")
     
     yield
     

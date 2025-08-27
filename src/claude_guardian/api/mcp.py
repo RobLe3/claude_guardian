@@ -10,33 +10,13 @@ from pydantic import BaseModel, Field
 
 from ..core.security import SecurityManager, ThreatAnalysis
 from ..core.database import DatabaseManager
-# Dependency injection - will be provided by FastAPI
+from ..core.dependencies import get_db_manager, get_security_manager
 
 logger = logging.getLogger(__name__)
 
 mcp_router = APIRouter()
 
-# Global managers (set by main app)
-_db_manager: DatabaseManager = None
-_security_manager: SecurityManager = None
-
-def set_managers(db_manager: DatabaseManager, security_manager: SecurityManager):
-    """Set global manager instances"""
-    global _db_manager, _security_manager
-    _db_manager = db_manager
-    _security_manager = security_manager
-
-async def get_db_manager() -> DatabaseManager:
-    """Get database manager dependency"""
-    if not _db_manager:
-        raise HTTPException(status_code=503, detail="Database manager not initialized")
-    return _db_manager
-
-async def get_security_manager() -> SecurityManager:
-    """Get security manager dependency"""
-    if not _security_manager:
-        raise HTTPException(status_code=503, detail="Security manager not initialized")
-    return _security_manager
+# Dependency injection is now handled by core.dependencies module
 
 
 class SecurityScanRequest(BaseModel):

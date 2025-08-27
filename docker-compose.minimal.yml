@@ -15,18 +15,18 @@ services:
         RUN pip install websockets fastapi uvicorn pydantic
         COPY scripts/ ./scripts/
         COPY config/ ./config/
-        EXPOSE 8083
-        CMD ["python3", "scripts/start-mcp-service.py", "--port", "8083"]
+        EXPOSE 8000
+        CMD ["python3", "scripts/start-mcp-service.py", "--port", "8000"]
     container_name: claude-guardian-mcp
     restart: unless-stopped
     environment:
-      - MCP_PORT=8083
+      - MCP_PORT=8000
       - MCP_HOST=0.0.0.0
       - SECURITY_LEVEL=${SECURITY_LEVEL:-moderate}
     ports:
-      - "127.0.0.1:8083:8083"
+      - "127.0.0.1:8000:8000"
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8083/health')"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3

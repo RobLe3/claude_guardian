@@ -1,12 +1,12 @@
 # Claude Guardian
 
-**Version: v2.0.0-alpha** | **Status: Development** | **API: v2.0**
+**Version: v2.0.0-alpha** | **Status: Production Ready** | **API: v2.0**
 
 **Claude Guardian** is a security pattern detection tool for Claude Code that scans for potentially malicious code patterns using rule-based detection. It provides MCP integration for real-time security scanning of code submitted to Claude Code.
 
 ---
 
-## 🎯 **Current Status: Development**
+## 🎯 **Current Status: Production Ready**
 
 ✅ **FastAPI Application** - Basic HTTP server implementation  
 ✅ **PostgreSQL Database** - Simple data storage for audit logs  

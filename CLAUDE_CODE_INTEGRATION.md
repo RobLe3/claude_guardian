@@ -1,6 +1,6 @@
 # Claude Code Integration Guide
 
-**Claude Guardian v2.0.0-alpha** - Complete integration guide for HTTP-based MCP connection with FastAPI.
+**Claude Guardian v2.0.0-alpha** - Integration guide for WebSocket-based MCP connection with Claude Code.
 
 ---
 
@@ -8,21 +8,22 @@
 
 ### **Step 1: Start Claude Guardian v2.0**
 ```bash
-# Use the v2.0 setup script (recommended)
+# Use the setup script (recommended)
 ./setup-v2.sh
 
 # Expected output:
-# ✅ Claude Guardian v2.0.0-alpha is production-ready
-# 🚀 FastAPI Service: Running on port 8083 (sub-6ms response)
-# 🗺️ PostgreSQL: Running with persistent storage (46MB)
-# 🎯 Qdrant: Running with 4 active collections (18MB)
-# ✅ MCP Tools: 5/5 operational via HTTP protocol
+# ✅ Claude Guardian v2.0.0-alpha started successfully
+# 🚀 FastAPI Application: Running on configured port (default 8000)
+# 🗺️ PostgreSQL: Database connection established
+# 🗄️ Redis: Cache service connected
+# 🎯 Qdrant: Vector database configured (minimal usage)
+# ✅ MCP Server: WebSocket protocol ready for Claude Code
 
 # Alternative: Manual startup
-# python3 -m uvicorn src.iff_guardian.main:app --host 0.0.0.0 --port 8083
+# python3 -m uvicorn src.claude_guardian.main:app --host 0.0.0.0 --port 8000
 ```
 
-### **Step 2: Configure Claude Code MCP v2.0**
+### **Step 2: Configure Claude Code MCP Integration**
 
 **Use the generated configuration file:**
 
@@ -38,7 +39,7 @@ cp claude-code-mcp-config.json ~/.claude-code/mcp/
   "name": "claude-guardian",
   "command": "python3",
   "args": [
-    "-m", "uvicorn", "src.iff_guardian.main:app", 
+    "-m", "uvicorn", "src.claude_guardian.main:app", 
     "--host", "0.0.0.0", "--port", "8083"
   ],
   "env": {
@@ -54,8 +55,8 @@ cp claude-code-mcp-config.json ~/.claude-code/mcp/
 In Claude Code, you should see:
 - ✅ **5 security tools** available via HTTP MCP
 - ✅ **claude-guardian v2.0.0-alpha** server connected
-- ✅ **Sub-6ms response times** for real-time analysis
-- ✅ **100% detection accuracy** on security vectors
+- ✅ **Real-time analysis** via MCP WebSocket protocol
+- ✅ **Pattern-based detection** for common security threats
 
 ---
 
@@ -71,8 +72,8 @@ In Claude Code, you should see:
     "claude-guardian": {
       "command": "python3",
       "args": [
-        "-m", "uvicorn", "src.iff_guardian.main:app",
-        "--host", "0.0.0.0", "--port", "8083"
+        "-m", "uvicorn", "src.claude_guardian.main:app",
+        "--host", "0.0.0.0", "--port", "8000"
       ],
       "env": {
         "GUARDIAN_VERSION": "2.0.0-alpha",

@@ -5,12 +5,12 @@ app:
   environment: "production"
   debug: false
   reload: false
-  log_level: "WARNING"
+  log_level: "${LOG_LEVEL:-WARNING}"
   version: "${APP_VERSION}"
 
 server:
-  host: "0.0.0.0"
-  port: 8000
+  host: "${HOST:-0.0.0.0}"
+  port: ${PORT:-8000}
   workers: 4
   timeout: 120
   keep_alive: 10
@@ -61,13 +61,13 @@ cors:
   headers: ["Authorization", "Content-Type", "X-Requested-With", "X-API-Key"]
 
 logging:
-  level: "WARNING"
+  level: "${LOG_LEVEL:-WARNING}"
   format: "json"
   handlers:
     - type: "console"
-      level: "ERROR"
+      level: "${LOG_LEVEL:-ERROR}"
     - type: "file"
-      level: "WARNING"
+      level: "${LOG_LEVEL:-WARNING}"
       filename: "/var/log/claude-guardian/production.log"
       max_bytes: 104857600  # 100MB
       backup_count: 20

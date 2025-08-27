@@ -213,7 +213,7 @@ generate_claude_config() {
   "mcpServers": {
     "claude-guardian": {
       "command": "python3",
-      "args": ["-m", "uvicorn", "src.iff_guardian.main:app", "--host", "0.0.0.0", "--port", "8083"],
+      "args": ["-m", "uvicorn", "src.claude_guardian.main:app", "--host", "0.0.0.0", "--port", "8000"],
       "env": {
         "PYTHONPATH": "$(pwd)"
       }

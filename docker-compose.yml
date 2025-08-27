@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: claude_guardian
       POSTGRES_USER: cguser
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your_secure_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_THIS_SECURE_PASSWORD_123!}
     ports:
       - "5432:5432"
     volumes:
@@ -52,9 +52,9 @@ services:
       - "6379:6379"
     volumes:
       - ./data/redis:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-your_redis_password}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-CHANGE_THIS_REDIS_PASSWORD_123!}
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-your_redis_password}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-CHANGE_THIS_REDIS_PASSWORD_123!}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -67,14 +67,18 @@ services:
     container_name: claude-guardian-app
     restart: unless-stopped
     ports:
-      - "8083:8083"
+      - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://cguser:${POSTGRES_PASSWORD:-your_secure_password}@claude-guardian-postgres:5432/claude_guardian
+      DATABASE_URL: postgresql+asyncpg://cguser:${POSTGRES_PASSWORD:-CHANGE_THIS_SECURE_PASSWORD_123!}@claude-guardian-postgres:5432/claude_guardian
       QDRANT_URL: http://claude-guardian-qdrant:6333
-      REDIS_URL: redis://:${REDIS_PASSWORD:-your_redis_password}@claude-guardian-redis:6379/0
+      REDIS_URL: redis://:${REDIS_PASSWORD:-CHANGE_THIS_REDIS_PASSWORD_123!}@claude-guardian-redis:6379/0
       HOST: 0.0.0.0
-      PORT: 8083
+      PORT: 8000
+      MCP_PORT: 8000
       ENVIRONMENT: production
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SECURITY_LEVEL: ${SECURITY_LEVEL:-moderate}
+      JWT_SECRET: ${JWT_SECRET:-CHANGE_THIS_JWT_SECRET_KEY_MINIMUM_32_CHARS_LONG}
     depends_on:
       - claude-guardian-postgres
       - claude-guardian-qdrant

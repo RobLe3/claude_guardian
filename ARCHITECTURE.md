@@ -1,85 +1,119 @@
 # 🏗️ Claude Guardian Architecture
 
-## Container Stack Overview
+## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        CLAUDE GUARDIAN v2.0.0                          │
-├─────────────────────────────────────────────────────────────────────────┤
-│  🐍 Python Application (FastAPI)                                       │
-│  ├── MCP Server (Claude Code Integration)                              │
-│  ├── Security Analysis Engine                                          │
-│  ├── LightRAG Integration (Python Library)                             │
-│  └── API Endpoints (REST + WebSocket)                                  │
-├─────────────────────────────────────────────────────────────────────────┤
-│                        DATABASE LAYER                                  │
-├─────────────────┬─────────────────┬─────────────────────────────────────┤
-│   PostgreSQL    │     Qdrant      │            Redis                    │
-│  🗄️ Container   │  🎯 Container   │         ⚡ Container               │
-│                 │                 │                                     │
-│ • Audit Logs    │ • Threat Vectors│ • Session Cache                     │
-│ • Scan Results  │ • Semantic Search│ • Real-time Data                   │
-│ • Security Events│ • LightRAG Data │ • Rate Limiting                    │
-│ • User Data     │ • ML Embeddings │ • Temp Storage                      │
-└─────────────────┴─────────────────┴─────────────────────────────────────┘
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Claude Code   │───▶│  FastAPI App    │───▶│ PostgreSQL      │
+│                 │    │  (MCP Server)   │    │ (Audit Logs)    │
+└─────────────────┘    └─────────┬───────┘    └─────────────────┘
+                                │
+                         ┌──────▼──────┐      ┌─────────────────┐
+                         │   Security  │      │     Redis       │
+                         │   Scanner   │      │   (Caching)     │
+                         │ (Regex-based)│      │                 │
+                         └─────────────┘      └─────────────────┘
+                                │
+                         ┌──────▼──────┐
+                         │   Qdrant    │
+                         │  (Vector    │
+                         │ Collections)│
+                         └─────────────┘
 ```
 
-## Service Breakdown
+## Actual Implementation
 
-### 🐳 **Container Services**
+Claude Guardian is a **single FastAPI application** with integrated security scanning capabilities. It provides:
 
-| Container Name | Image | Ports | Purpose |
+- **MCP Server**: WebSocket integration with Claude Code for security analysis
+- **Pattern-based Security Scanner**: Regex-based threat detection (not ML/AI)
+- **Audit Database**: PostgreSQL for logging scan results and security events
+- **Basic Caching**: Redis for session management and temporary data
+- **Vector Storage**: Qdrant configured but used minimally
+
+## Technology Stack
+
+### Core Application
+- **Framework**: FastAPI with Python 3.12
+- **Protocol**: WebSocket-based MCP (Model Context Protocol)
+- **Security Scanner**: Regex pattern matching (not ML-based)
+- **Architecture**: Monolithic application with integrated components
+
+### Database Layer
+
+| Container | Technology | Purpose | Usage Level |
 |---|---|---|---|
-| `claude-guardian-postgres` | `postgres:17-alpine` | `5432:5432` | Persistent data storage |
-| `claude-guardian-qdrant` | `qdrant/qdrant:latest` | `6333:6333`, `6334:6334` | Vector database |
-| `claude-guardian-redis` | `redis:7-alpine` | `6379:6379` | Cache & session store |
+| PostgreSQL | `postgres:17-alpine` | Audit logs, scan results | **Active** |
+| Redis | `redis:7-alpine` | Session cache, temporary data | **Active** |
+| Qdrant | `qdrant/qdrant:latest` | Vector collections | **Configured, minimal usage** |
 
-### 🐍 **Python Application Components**
+### Application Structure
 
 | Component | Location | Purpose |
 |---|---|---|
-| **FastAPI App** | `src/iff_guardian/main.py` | Main application server |
-| **LightRAG** | Python Library (not containerized) | RAG functionality using Qdrant |
-| **Security Engine** | `src/iff_guardian/core/security.py` | Threat detection & analysis |
-| **Database Manager** | `src/iff_guardian/core/database.py` | Multi-database integration |
-| **MCP Server** | `src/iff_guardian/api/mcp.py` | Claude Code integration |
+| **FastAPI App** | `src/claude_guardian/main.py` | Main application server |
+| **Security Scanner** | `src/claude_guardian/core/security.py` | Pattern-based threat detection |
+| **Database Manager** | `src/claude_guardian/core/database.py` | PostgreSQL, Redis, Qdrant integration |
+| **MCP Integration** | `src/claude_guardian/api/mcp.py` | Claude Code WebSocket API |
 
-## 🔄 **Data Flow Architecture**
+## Data Flow
 
 ```
-Claude Code → MCP Protocol → FastAPI → Security Engine
+Claude Code → MCP WebSocket → FastAPI Application
+                                   ↓
+                        ┌─────────────────┐
+                        │ Security Scanner │
+                        │ (Regex Patterns) │
+                        └─────────┬───────┘
                                   ↓
-                          ┌─────────────────┐
-                          │   LightRAG      │
-                          │  (Python Lib)  │
-                          └─────────────────┘
-                                  ↓
-    ┌─────────────────┬─────────────────┬─────────────────┐
-    │   PostgreSQL    │     Qdrant      │      Redis      │
-    │                 │                 │                 │
-    │ Store Results → │ ← Vector Search │ ← Cache Data    │
-    │ Log Events      │   Embeddings    │   Sessions      │
-    │ Audit Trail     │   Similarity    │   Rate Limits   │
-    └─────────────────┴─────────────────┴─────────────────┘
+            ┌─────────────────────────────────────┐
+            │                                     │
+            ▼                                     ▼
+    ┌─────────────────┐                   ┌─────────────────┐
+    │   PostgreSQL    │                   │      Redis      │
+    │                 │                   │                 │
+    │ • Audit Logs    │                   │ • Sessions      │
+    │ • Scan Results  │                   │ • Cache Data    │
+    │ • Security Events│                   │ • Temp Storage  │
+    └─────────────────┘                   └─────────────────┘
+                            
+            Optional (configured but minimal usage):
+                    ┌─────────────────┐
+                    │     Qdrant      │
+                    │                 │
+                    │ • Collections   │
+                    │ • Vector Storage│
+                    └─────────────────┘
 ```
 
-## 🎯 **LightRAG Integration Details**
+## Security Analysis Engine
 
-**LightRAG is NOT containerized** - it's a Python library that runs within the Claude Guardian application:
+The security scanner uses **regex pattern matching** to identify potential threats:
 
 ```python
-# LightRAG connects to Qdrant for vector operations
-lightrag_service = LightRAG(
-    qdrant_client=qdrant_client,  # Points to claude-guardian-qdrant:6333
-    collections=['security_procedures', 'vulnerability_db', 'threat_patterns']
-)
+# Security patterns for threat detection
+self.threat_patterns = {
+    "sql_injection": [
+        r"(?i)union\s+select",
+        r"(?i)or\s+1=1",
+        r"(?i)drop\s+table"
+    ],
+    "xss": [
+        r"<script[^>]*>",
+        r"javascript:",
+        r"on\w+\s*="
+    ],
+    # Additional patterns...
+}
 ```
 
-### Current Qdrant Collections:
-- `security_procedures` - Security best practices and procedures
-- `vulnerability_db` - Known vulnerabilities and CVE data  
-- `attack_signatures` - Attack pattern signatures
-- `threat_patterns` - ML threat pattern embeddings
+### Current Qdrant Collections (Configured but Minimal Usage):
+- `security_procedures` - Security best practices
+- `vulnerability_db` - Vulnerability data
+- `attack_signatures` - Attack patterns
+- `threat_patterns` - Threat signatures
+
+**Note**: Vector search and RAG functionality are configured but not actively used in the current implementation.
 
 ## 🔧 **Container Management**
 
@@ -111,24 +145,56 @@ docker logs claude-guardian-qdrant
 
 # Connect to containers
 docker exec -it claude-guardian-postgres psql -U cguser -d claude_guardian
-docker exec -it claude-guardian-redis redis-cli -a redis_password_123
+docker exec -it claude-guardian-redis redis-cli -a ${REDIS_PASSWORD}
 ```
 
-## 🚀 **Production Deployment**
+## Deployment Options
 
-The architecture supports multiple deployment scenarios:
+### 1. **Development (Recommended)**
+- Docker Compose for databases: `docker-compose up -d`
+- Local Python FastAPI app: `python -m claude_guardian.main`
+- Claude Code MCP integration via WebSocket
 
-1. **Development**: Containers + Local Python app
-2. **Docker**: Full containerized stack with docker-compose
-3. **Kubernetes**: Helm charts with persistent volumes
-4. **Hybrid**: Cloud databases + Local application
+### 2. **Containerized (Optional)**
+- Full stack: `docker-compose --profile app up -d`
+- All services in containers including the FastAPI app
 
-## 🛡️ **Security Features**
+### 3. **Production Considerations**
+- Single FastAPI application (not microservices)
+- PostgreSQL for persistent data
+- Redis for session management
+- Simple horizontal scaling via multiple FastAPI instances
 
-- **Network Isolation**: All containers in `claude-guardian-network`
-- **Persistent Storage**: Named volumes for data persistence  
-- **Health Checks**: Automated container health monitoring
-- **Authentication**: Database passwords and Redis authentication
-- **Port Management**: Standardized port mapping across services
+## Security Capabilities
 
-This architecture provides enterprise-grade scalability while maintaining simplicity for development and deployment.
+### Current Features
+- **Pattern-based Scanning**: Regex detection for SQL injection, XSS, command injection
+- **Audit Logging**: Complete scan results and security events in PostgreSQL
+- **MCP Integration**: Secure WebSocket communication with Claude Code
+- **Basic Authentication**: JWT-based auth (if libraries available)
+
+### Limitations
+- **No Machine Learning**: Uses regex patterns, not AI/ML models
+- **No Complex Enterprise Features**: Single application, not microservices
+- **Basic Threat Detection**: Pattern matching with configurable severity levels
+
+## Performance Expectations
+
+- **Response Time**: Variable based on code size and pattern complexity
+- **Accuracy**: Pattern-based detection with configurable confidence levels
+- **Scalability**: Single FastAPI instance with database backend
+- **Throughput**: Suitable for individual developer or small team usage
+
+## Future Roadmap
+
+Features that could be implemented:
+- Enhanced ML-based threat detection using Qdrant vector search
+- Advanced RAG capabilities with LightRAG integration
+- Multi-tenant architecture with role-based access
+- Real-time collaborative security analysis
+- Integration with external security tools and APIs
+
+---
+
+**Current State**: Functional single-application security scanner with MCP integration
+**Target Use Case**: Individual developers and small teams using Claude Code for security analysis

@@ -11,8 +11,6 @@ pytest-benchmark==4.0.0
 pytest-html==4.1.1
 factory-boy==3.3.0
 faker==20.1.0
-httpx==0.25.2
-
 # Code Quality
 black==23.11.0
 isort==5.12.0
@@ -52,9 +50,6 @@ pgcli==3.5.0
 
 # API Documentation
 redoc-cli==0.13.2
-
-# Environment Management
-python-dotenv==1.0.0
 
 # Debugging
 pdb++==0.10.3

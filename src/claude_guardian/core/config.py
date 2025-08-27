@@ -7,6 +7,7 @@ import os
 import secrets
 from dataclasses import dataclass
 from typing import Optional
+import logging
 from urllib.parse import urlparse
 
 
@@ -22,7 +23,7 @@ class DatabaseConfig:
         return cls(
             postgres_url=os.getenv(
                 "DATABASE_URL", 
-                "postgresql://cguser:password@localhost:5432/claude_guardian"
+                "postgresql+asyncpg://cguser:CHANGE_THIS_SECURE_PASSWORD_123!@localhost:5432/claude_guardian"
             ),
             qdrant_url=os.getenv("QDRANT_URL", "http://localhost:6333"),
             redis_url=os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -67,7 +68,7 @@ class ServiceConfig:
     def from_env(cls) -> "ServiceConfig":
         return cls(
             host=os.getenv("HOST", "0.0.0.0"),
-            port=int(os.getenv("PORT", "8080")),
+            port=int(os.getenv("PORT", "8000")),
             workers=int(os.getenv("WORKERS", "4")),
             debug=os.getenv("DEBUG", "false").lower() == "true",
             environment=os.getenv("ENVIRONMENT", "production")
@@ -85,7 +86,7 @@ class MCPConfig:
     @classmethod
     def from_env(cls) -> "MCPConfig":
         return cls(
-            port=int(os.getenv("MCP_PORT", "8083")),
+            port=int(os.getenv("MCP_PORT", "8000")),
             host=os.getenv("MCP_HOST", "0.0.0.0"),
             max_connections=int(os.getenv("MCP_MAX_CONNECTIONS", "100")),
             timeout=int(os.getenv("MCP_TIMEOUT", "30"))
@@ -113,6 +114,40 @@ class ThreatAnalysisConfig:
 
 
 @dataclass
+class LoggingConfig:
+    """Logging configuration"""
+    level: str = "INFO"
+    format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    enable_debug_logging: bool = False
+    
+    @classmethod
+    def from_env(cls) -> "LoggingConfig":
+        return cls(
+            level=os.getenv("LOG_LEVEL", "INFO"),
+            format=os.getenv("LOG_FORMAT", "%(asctime)s - %(name)s - %(levelname)s - %(message)s"),
+            enable_debug_logging=os.getenv("ENABLE_DEBUG_LOGGING", "false").lower() == "true"
+        )
+
+
+@dataclass
+class EnvironmentConfig:
+    """Environment-specific configuration"""
+    environment: str = "production"
+    development_mode: bool = False
+    guardian_mode: str = "full"
+    security_level: str = "moderate"
+    
+    @classmethod 
+    def from_env(cls) -> "EnvironmentConfig":
+        return cls(
+            environment=os.getenv("ENVIRONMENT", "production"),
+            development_mode=os.getenv("DEVELOPMENT_MODE", "false").lower() == "true",
+            guardian_mode=os.getenv("GUARDIAN_MODE", "full"),
+            security_level=os.getenv("SECURITY_LEVEL", "moderate")
+        )
+
+
+@dataclass
 class Settings:
     """Main application settings"""
     database: DatabaseConfig
@@ -120,6 +155,8 @@ class Settings:
     service: ServiceConfig
     mcp: MCPConfig
     threat_analysis: ThreatAnalysisConfig
+    logging: LoggingConfig
+    environment: EnvironmentConfig
     
     @classmethod
     def from_env(cls) -> "Settings":
@@ -129,7 +166,9 @@ class Settings:
             security=SecurityConfig.from_env(),
             service=ServiceConfig.from_env(),
             mcp=MCPConfig.from_env(),
-            threat_analysis=ThreatAnalysisConfig.from_env()
+            threat_analysis=ThreatAnalysisConfig.from_env(),
+            logging=LoggingConfig.from_env(),
+            environment=EnvironmentConfig.from_env()
         )
     
     def validate(self) -> None:
@@ -182,6 +221,16 @@ class Settings:
             "threat_analysis": {
                 "detection_threshold": self.threat_analysis.detection_threshold,
                 "enable_ml_analysis": self.threat_analysis.enable_ml_analysis
+            },
+            "logging": {
+                "level": self.logging.level,
+                "enable_debug_logging": self.logging.enable_debug_logging
+            },
+            "environment": {
+                "environment": self.environment.environment,
+                "development_mode": self.environment.development_mode,
+                "guardian_mode": self.environment.guardian_mode,
+                "security_level": self.environment.security_level
             }
         }
 
