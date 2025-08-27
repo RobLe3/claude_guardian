@@ -1,0 +1,241 @@
+{
+  "basic_endpoints": {
+    "/": {
+      "avg_ms": 4.3414440006017685,
+      "min_ms": 3.151814977172762,
+      "max_ms": 16.11214899457991,
+      "median_ms": 3.7785840104334056,
+      "std_dev": 2.801816668543911,
+      "success_rate": 100.0,
+      "errors": 0,
+      "total_requests": 20
+    },
+    "/api/v1/mcp/tools": {
+      "avg_ms": 3.879992396105081,
+      "min_ms": 3.2832190045155585,
+      "max_ms": 4.634506010916084,
+      "median_ms": 3.91348751145415,
+      "std_dev": 0.46524429874281215,
+      "success_rate": 100.0,
+      "errors": 0,
+      "total_requests": 20
+    },
+    "/health": {
+      "avg_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "median_ms": 0,
+      "std_dev": 0,
+      "success_rate": 0,
+      "errors": 20,
+      "total_requests": 20
+    }
+  },
+  "security_scanning": {
+    "small": {
+      "payload_size_kb": 0.267578125,
+      "response_time_ms": 8.51704302476719,
+      "threat_level": "high",
+      "findings_count": 1,
+      "confidence": 0.3,
+      "server_processing_time_ms": 1,
+      "status": "success"
+    },
+    "medium": {
+      "payload_size_kb": 4.271484375,
+      "response_time_ms": 5.885749997105449,
+      "threat_level": "high",
+      "findings_count": 6,
+      "confidence": 1.0,
+      "server_processing_time_ms": 0,
+      "status": "success"
+    },
+    "large": {
+      "payload_size_kb": 19.5283203125,
+      "response_time_ms": 8.565126976463944,
+      "threat_level": "high",
+      "findings_count": 8,
+      "confidence": 1.0,
+      "server_processing_time_ms": 3,
+      "status": "success"
+    }
+  },
+  "load_tests": {
+    "/api/v1/mcp/tools_5c_50t": {
+      "total_time_sec": 0.12471917597576976,
+      "requests_per_sec": 400.9006602939224,
+      "success_rate": 100.0,
+      "failed_requests": 0,
+      "avg_response_time_ms": 11.004984573228285,
+      "min_response_time_ms": 6.732083973474801,
+      "max_response_time_ms": 18.495292984880507,
+      "median_response_time_ms": 10.81492699449882,
+      "p95_response_time_ms": 15.790339035447687
+    },
+    "/api/v1/mcp/tools_10c_100t": {
+      "total_time_sec": 0.24606476997723803,
+      "requests_per_sec": 406.39706370501716,
+      "success_rate": 100.0,
+      "failed_requests": 0,
+      "avg_response_time_ms": 22.651482118526474,
+      "min_response_time_ms": 13.068992004264146,
+      "max_response_time_ms": 33.55669998563826,
+      "median_response_time_ms": 22.941442002775148,
+      "p95_response_time_ms": 30.613507027737796
+    },
+    "/_20c_200t": {
+      "total_time_sec": 0.4991763950092718,
+      "requests_per_sec": 400.6599711035718,
+      "success_rate": 100.0,
+      "failed_requests": 0,
+      "avg_response_time_ms": 45.01736911945045,
+      "min_response_time_ms": 16.391017998103052,
+      "max_response_time_ms": 83.80115602631122,
+      "median_response_time_ms": 45.28571100672707,
+      "p95_response_time_ms": 63.00344399642199
+    }
+  },
+  "system_resources": {
+    "avg_system_cpu_percent": 35.68666666666667,
+    "avg_system_memory_percent": 60.86,
+    "avg_api_cpu_percent": 0.11333333333333334,
+    "avg_api_memory_mb": 76.21484375,
+    "measurements": [
+      {
+        "timestamp": 1756301861.508076,
+        "system_cpu_percent": 43.4,
+        "system_memory_percent": 60.5,
+        "system_memory_used_mb": 16718.26953125,
+        "api_cpu_percent": 0.0,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301863.5159192,
+        "system_cpu_percent": 31.4,
+        "system_memory_percent": 61.0,
+        "system_memory_used_mb": 16909.18359375,
+        "api_cpu_percent": 0.1,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301865.525265,
+        "system_cpu_percent": 23.4,
+        "system_memory_percent": 62.6,
+        "system_memory_used_mb": 17421.0625,
+        "api_cpu_percent": 0.1,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301867.531977,
+        "system_cpu_percent": 34.5,
+        "system_memory_percent": 61.4,
+        "system_memory_used_mb": 17034.64453125,
+        "api_cpu_percent": 0.1,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301869.539679,
+        "system_cpu_percent": 43.3,
+        "system_memory_percent": 60.9,
+        "system_memory_used_mb": 16850.83203125,
+        "api_cpu_percent": 0.1,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301871.545386,
+        "system_cpu_percent": 48.1,
+        "system_memory_percent": 61.1,
+        "system_memory_used_mb": 16937.83984375,
+        "api_cpu_percent": 0.1,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301873.552887,
+        "system_cpu_percent": 33.2,
+        "system_memory_percent": 61.6,
+        "system_memory_used_mb": 17104.2578125,
+        "api_cpu_percent": 0.1,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301875.559579,
+        "system_cpu_percent": 26.5,
+        "system_memory_percent": 61.3,
+        "system_memory_used_mb": 16996.64453125,
+        "api_cpu_percent": 0.1,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301877.569612,
+        "system_cpu_percent": 23.9,
+        "system_memory_percent": 60.4,
+        "system_memory_used_mb": 16698.890625,
+        "api_cpu_percent": 0.1,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301879.5770218,
+        "system_cpu_percent": 54.2,
+        "system_memory_percent": 60.5,
+        "system_memory_used_mb": 16715.2578125,
+        "api_cpu_percent": 0.2,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301881.5858188,
+        "system_cpu_percent": 49.9,
+        "system_memory_percent": 60.6,
+        "system_memory_used_mb": 16753.421875,
+        "api_cpu_percent": 0.1,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301883.595249,
+        "system_cpu_percent": 41.5,
+        "system_memory_percent": 60.3,
+        "system_memory_used_mb": 16650.6015625,
+        "api_cpu_percent": 0.1,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301885.6044521,
+        "system_cpu_percent": 21.9,
+        "system_memory_percent": 60.1,
+        "system_memory_used_mb": 16607.1640625,
+        "api_cpu_percent": 0.2,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301887.609205,
+        "system_cpu_percent": 34.3,
+        "system_memory_percent": 60.2,
+        "system_memory_used_mb": 16647.390625,
+        "api_cpu_percent": 0.1,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      },
+      {
+        "timestamp": 1756301889.610959,
+        "system_cpu_percent": 25.8,
+        "system_memory_percent": 60.4,
+        "system_memory_used_mb": 16698.08203125,
+        "api_cpu_percent": 0.2,
+        "api_memory_mb": 76.21484375,
+        "api_threads": 1
+      }
+    ]
+  }
+}

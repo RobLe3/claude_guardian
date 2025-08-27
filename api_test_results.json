@@ -1,0 +1,102 @@
+{
+  "bulk_results": [
+    {
+      "filename": "safe_code.py",
+      "threat_level": "low",
+      "findings_count": 0,
+      "confidence": 0.9,
+      "processing_time": 1
+    },
+    {
+      "filename": "vulnerable_sql.php",
+      "threat_level": "low",
+      "findings_count": 0,
+      "confidence": 0.9,
+      "processing_time": 0
+    },
+    {
+      "filename": "xss_vulnerability.js",
+      "threat_level": "medium",
+      "findings_count": 2,
+      "confidence": 0.3,
+      "processing_time": 0
+    },
+    {
+      "filename": "command_injection.py",
+      "threat_level": "low",
+      "findings_count": 0,
+      "confidence": 0.9,
+      "processing_time": 0
+    },
+    {
+      "filename": "hardcoded_secrets.js",
+      "threat_level": "medium",
+      "findings_count": 1,
+      "confidence": 0.3,
+      "processing_time": 0
+    }
+  ],
+  "large_file_results": {
+    "file_size": 381129,
+    "processing_time": 47.827959060668945,
+    "throughput": 7968748.980414247,
+    "findings": 3
+  },
+  "concurrent_results": {
+    "sequential_time": 0.33211708068847656,
+    "concurrent_time": 0.7810592651367188,
+    "speedup": 0.4252136752136752,
+    "samples_count": 10
+  },
+  "error_results": [
+    {
+      "test": "empty_string",
+      "status": "success",
+      "processing_time": 0.07891654968261719,
+      "findings": 0,
+      "threat_level": "low"
+    },
+    {
+      "test": "very_long_string",
+      "status": "success",
+      "processing_time": 1131.9329738616943,
+      "findings": 0,
+      "threat_level": "low"
+    },
+    {
+      "test": "null_bytes",
+      "status": "success",
+      "processing_time": 0.048160552978515625,
+      "findings": 0,
+      "threat_level": "low"
+    },
+    {
+      "test": "unicode_chars",
+      "status": "success",
+      "processing_time": 0.053882598876953125,
+      "findings": 0,
+      "threat_level": "low"
+    },
+    {
+      "test": "mixed_encoding",
+      "status": "success",
+      "processing_time": 0.026226043701171875,
+      "findings": 0,
+      "threat_level": "low"
+    },
+    {
+      "test": "only_whitespace",
+      "status": "success",
+      "processing_time": 0.029325485229492188,
+      "findings": 0,
+      "threat_level": "low"
+    },
+    {
+      "test": "special_regex_chars",
+      "status": "success",
+      "processing_time": 0.026941299438476562,
+      "findings": 0,
+      "threat_level": "low"
+    }
+  ]
+}

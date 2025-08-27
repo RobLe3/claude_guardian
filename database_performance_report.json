@@ -1,0 +1,141 @@
+{
+  "timestamp": "2025-08-27T10:52:07.692827",
+  "summary": {
+    "total_operations_tested": 3700,
+    "databases_tested": 2,
+    "operation_types": 7,
+    "overall_success_rate": 1.0
+  },
+  "connection_benchmarks": [
+    {
+      "database": "Redis",
+      "avg_connection_time_ms": 5.136967392172664,
+      "min_connection_time_ms": 2.9397809994407,
+      "max_connection_time_ms": 24.127201992087066,
+      "success_rate": 1.0,
+      "connection_pool_size": 1,
+      "max_concurrent_connections": 100
+    },
+    {
+      "database": "Qdrant",
+      "avg_connection_time_ms": 54.7969054459827,
+      "min_connection_time_ms": 43.83802798110992,
+      "max_connection_time_ms": 99.39790901262313,
+      "success_rate": 1.0,
+      "connection_pool_size": 1,
+      "max_concurrent_connections": 50
+    }
+  ],
+  "operation_benchmarks": [
+    {
+      "operation": "SET",
+      "database": "Redis",
+      "avg_time_ms": 1.041695582214743,
+      "min_time_ms": 0.49806799506768584,
+      "max_time_ms": 10.986900015268475,
+      "median_time_ms": 0.998214993160218,
+      "std_dev_ms": 0.545956136682872,
+      "operations_per_second": 959.9733521706081,
+      "success_rate": 1.0,
+      "error_count": 0,
+      "total_operations": 1000,
+      "timestamp": "2025-08-27T10:52:02.834238"
+    },
+    {
+      "operation": "GET",
+      "database": "Redis",
+      "avg_time_ms": 0.6890332067850977,
+      "min_time_ms": 0.4219289985485375,
+      "max_time_ms": 1.5279099461622536,
+      "median_time_ms": 0.6446554616559297,
+      "std_dev_ms": 0.1977207642199365,
+      "operations_per_second": 1451.3088631327598,
+      "success_rate": 1.0,
+      "error_count": 0,
+      "total_operations": 1000,
+      "timestamp": "2025-08-27T10:52:03.526669"
+    },
+    {
+      "operation": "HSET",
+      "database": "Redis",
+      "avg_time_ms": 1.011309063876979,
+      "min_time_ms": 0.5898750387132168,
+      "max_time_ms": 2.6798759936355054,
+      "median_time_ms": 0.9384629665873945,
+      "std_dev_ms": 0.28033050708189694,
+      "operations_per_second": 988.8174008511064,
+      "success_rate": 1.0,
+      "error_count": 0,
+      "total_operations": 500,
+      "timestamp": "2025-08-27T10:52:04.034117"
+    },
+    {
+      "operation": "LPUSH",
+      "database": "Redis",
+      "avg_time_ms": 1.004721759003587,
+      "min_time_ms": 0.56578399380669,
+      "max_time_ms": 3.784136031754315,
+      "median_time_ms": 0.9225424728356302,
+      "std_dev_ms": 0.32523933887502415,
+      "operations_per_second": 995.3004312275771,
+      "success_rate": 1.0,
+      "error_count": 0,
+      "total_operations": 500,
+      "timestamp": "2025-08-27T10:52:04.538171"
+    },
+    {
+      "operation": "SADD",
+      "database": "Redis",
+      "avg_time_ms": 0.9676752493251115,
+      "min_time_ms": 0.5815259646624327,
+      "max_time_ms": 1.977830019313842,
+      "median_time_ms": 0.9000434947665781,
+      "std_dev_ms": 0.27645235702076526,
+      "operations_per_second": 1033.4045442388165,
+      "success_rate": 1.0,
+      "error_count": 0,
+      "total_operations": 500,
+      "timestamp": "2025-08-27T10:52:05.024347"
+    },
+    {
+      "operation": "VECTOR_INSERT",
+      "database": "Qdrant",
+      "avg_time_ms": 6.833451148122549,
+      "min_time_ms": 5.227938003372401,
+      "max_time_ms": 26.738954009488225,
+      "median_time_ms": 6.365037494106218,
+      "std_dev_ms": 2.4993194211322347,
+      "operations_per_second": 146.33894035735432,
+      "success_rate": 1.0,
+      "error_count": 0,
+      "total_operations": 100,
+      "timestamp": "2025-08-27T10:52:06.096851"
+    },
+    {
+      "operation": "VECTOR_SEARCH",
+      "database": "Qdrant",
+      "avg_time_ms": 5.897030289052054,
+      "min_time_ms": 4.620073013938963,
+      "max_time_ms": 19.1923170350492,
+      "median_time_ms": 5.7503614807501435,
+      "std_dev_ms": 1.446398473263221,
+      "operations_per_second": 169.57688039291887,
+      "success_rate": 1.0,
+      "error_count": 0,
+      "total_operations": 100,
+      "timestamp": "2025-08-27T10:52:06.687364"
+    }
+  ],
+  "resource_usage": {
+    "containers": {},
+    "system": {
+      "cpu_percent": 70.6,
+      "memory_percent": 57.5,
+      "disk_usage_percent": 20.9
+    },
+    "timestamp": "2025-08-27T10:52:07.692810"
+  },
+  "recommendations": [
+    "Redis: Consider connection pooling or pipelining for better performance"
+  ]
+}
