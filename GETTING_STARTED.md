@@ -24,7 +24,7 @@ python3 scripts/version.py
 #### **Option A: Easy Setup (Python-only)**
 ```bash
 # Validates environment and installs minimal dependencies
-./easy-setup.sh
+./setup.sh
 
 # Expected output:
 # ✅ Python 3.11.5 found
@@ -306,7 +306,7 @@ lsof -ti :8083 | xargs kill -9 2>/dev/null || true
 rm -f .env .mcp_pid claude-code-config.json
 
 # Run new setup
-./easy-setup.sh
+./setup.sh
 ```
 
 ---

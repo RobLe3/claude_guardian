@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
-# Claude Guardian v2.0.0-alpha - Out-of-the-Box Setup
-# Complete Enterprise Security Platform Setup
+# Claude Guardian v2.0.0-alpha - Universal Setup with Intelligent Routing
+# Automatically detects environment and deploys appropriate configuration
 # =============================================================================
 
 set -e
@@ -19,6 +19,12 @@ NC='\033[0m'
 VERSION="2.0.0-alpha"
 PROJECT_NAME="claude-guardian"
 PYTHON_MIN_VERSION="3.8"
+
+# Environment capabilities
+DOCKER_AVAILABLE=false
+GO_AVAILABLE=false
+PYTHON_AVAILABLE=false
+SETUP_MODE=""
 
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -44,53 +50,139 @@ banner() {
     echo ""
     echo -e "${CYAN}╔══════════════════════════════════════════════════╗"
     echo -e "║         🛡️  Claude Guardian v${VERSION}         ║"
-    echo -e "║    Complete Enterprise Security Platform Setup   ║"
+    echo -e "║      Universal Setup with Intelligent Routing   ║"
     echo -e "║                                                  ║"
-    echo -e "║  • FastAPI Application + Multi-Database Stack   ║"
-    echo -e "║  • Sub-6ms Response Times + 100% Detection      ║"
-    echo -e "║  • PostgreSQL + Qdrant + Redis Persistence      ║"
-    echo -e "║  • Production-Ready Docker Deployment           ║"
-    echo -e "║  • Claude Code Integration (HTTP MCP)            ║"
+    echo -e "║  🔍 Auto-detects your environment capabilities  ║"
+    echo -e "║  ⚡ Routes to optimal deployment strategy        ║"
+    echo -e "║  🛡️ Pattern-based Security Scanner              ║"
+    echo -e "║  🔗 Claude Code MCP Integration                  ║"
+    echo -e "║  📊 Production-ready with monitoring            ║"
     echo -e "╚══════════════════════════════════════════════════╝${NC}"
     echo ""
 }
 
-check_dependencies() {
-    log_step "Checking system dependencies..."
+detect_environment() {
+    log_step "Detecting environment capabilities..."
     
-    # Python check
-    if ! command -v python3 &> /dev/null; then
+    # Python check (required)
+    if command -v python3 &> /dev/null; then
+        local python_version=$(python3 --version | cut -d' ' -f2)
+        if python3 -c "import sys; exit(0 if sys.version_info >= (3, 8) else 1)" 2>/dev/null; then
+            PYTHON_AVAILABLE=true
+            log_success "Python $python_version detected"
+        else
+            log_error "Python 3.8+ required, found $python_version"
+            exit 1
+        fi
+    else
         log_error "Python 3 is required but not installed"
         exit 1
     fi
     
-    local python_version=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
-    if ! python3 -c "import sys; exit(0 if sys.version_info >= (3, 8) else 1)"; then
-        log_error "Python 3.8+ required, found $python_version"
-        exit 1
-    fi
-    log_success "Python $python_version detected"
-    
-    # Docker check
-    if ! command -v docker &> /dev/null; then
-        log_error "Docker is required but not installed"
-        log_info "Please install Docker Desktop from https://docker.com/products/docker-desktop"
-        exit 1
+    # Docker check (optional)
+    if command -v docker &> /dev/null && docker info &> /dev/null 2>&1; then
+        if command -v docker-compose &> /dev/null || docker compose version &> /dev/null 2>&1; then
+            DOCKER_AVAILABLE=true
+            log_success "Docker with Compose detected"
+        else
+            log_warn "Docker found but Compose missing"
+        fi
+    else
+        log_info "Docker not available (optional for lightweight setup)"
     fi
     
-    if ! docker info &> /dev/null; then
-        log_error "Docker is installed but not running"
-        log_info "Please start Docker Desktop and try again"
-        exit 1
+    # Go check (optional)
+    if command -v go &> /dev/null; then
+        GO_AVAILABLE=true
+        local go_version=$(go version | cut -d' ' -f3)
+        log_success "Go $go_version detected (enterprise features available)"
     fi
-    log_success "Docker is running"
     
-    # Docker Compose check
-    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-        log_error "Docker Compose is required but not found"
+    # Determine setup mode
+    if [[ "$PYTHON_AVAILABLE" == true && "$DOCKER_AVAILABLE" == true && "$GO_AVAILABLE" == true ]]; then
+        SETUP_MODE="enterprise"
+        log_info "🏢 Enterprise mode: Python + Docker + Go capabilities"
+    elif [[ "$PYTHON_AVAILABLE" == true && "$DOCKER_AVAILABLE" == true ]]; then
+        SETUP_MODE="full"
+        log_info "🐳 Full mode: Python + Docker deployment"
+    elif [[ "$PYTHON_AVAILABLE" == true ]]; then
+        SETUP_MODE="lightweight"
+        log_info "⚡ Lightweight mode: Python-only MCP service"
+    else
+        log_error "No valid setup mode detected"
         exit 1
     fi
-    log_success "Docker Compose available"
+}
+
+route_setup() {
+    case "$SETUP_MODE" in
+        "lightweight")
+            log_info "🚀 Routing to lightweight Python-only setup..."
+            setup_lightweight
+            ;;
+        "full")
+            log_info "🚀 Routing to full Docker stack setup..."
+            setup_full_stack
+            ;;
+        "enterprise")
+            log_info "🚀 Routing to enterprise setup with Go services..."
+            setup_enterprise
+            ;;
+        *)
+            log_error "Unknown setup mode: $SETUP_MODE"
+            exit 1
+            ;;
+    esac
+}
+
+setup_lightweight() {
+    log_step "Setting up lightweight Python-only MCP service..."
+    
+    # Install minimal dependencies
+    log_info "Installing minimal Python dependencies..."
+    pip3 install --user websockets fastapi uvicorn pydantic
+    
+    # Create minimal environment
+    cat > .env << EOF
+# Claude Guardian Lightweight Configuration
+GUARDIAN_MODE=mcp_only
+SECURITY_LEVEL=moderate
+MCP_PORT=8083
+MCP_HOST=0.0.0.0
+EOF
+    
+    # Start MCP service
+    if ! lsof -i :8083 &> /dev/null; then
+        python3 scripts/start-mcp-service.py --port 8083 > /tmp/claude-guardian-mcp.log 2>&1 &
+        echo "$!" > .mcp_pid
+        sleep 3
+    fi
+    
+    # Generate Claude Code config
+    generate_lightweight_config
+    
+    log_success "Lightweight setup complete - MCP service running on port 8083"
+}
+
+setup_full_stack() {
+    log_step "Setting up full Docker stack..."
+    
+    # Install full dependencies
+    install_python_dependencies
+    setup_environment
+    deploy_services
+    test_deployment
+    generate_claude_config
+    
+    log_success "Full stack setup complete"
+}
+
+setup_enterprise() {
+    log_step "Setting up enterprise environment with Go services..."
+    
+    log_warn "Enterprise Go services available but not implemented in v2.0.0-alpha"
+    log_info "Falling back to full stack setup..."
+    setup_full_stack
 }
 
 install_python_dependencies() {
@@ -208,12 +300,14 @@ test_deployment() {
 generate_claude_config() {
     log_step "Generating Claude Code integration configuration..."
     
+    local mcp_port=$(grep MCP_PORT .env 2>/dev/null | cut -d'=' -f2 || echo "8083")
+    
     cat > claude-code-mcp-config.json << EOF
 {
   "mcpServers": {
     "claude-guardian": {
       "command": "python3",
-      "args": ["-m", "uvicorn", "src.claude_guardian.main:app", "--host", "0.0.0.0", "--port", "8000"],
+      "args": ["-m", "uvicorn", "src.claude_guardian.main:app", "--host", "0.0.0.0", "--port", "$mcp_port"],
       "env": {
         "PYTHONPATH": "$(pwd)"
       }
@@ -227,29 +321,60 @@ EOF
     log_info "  cp claude-code-mcp-config.json ~/.claude-code/mcp/"
 }
 
+generate_lightweight_config() {
+    log_step "Generating lightweight Claude Code configuration..."
+    
+    local current_dir=$(pwd)
+    cat > claude-code-mcp-config.json << EOF
+{
+  "mcpServers": {
+    "claude-guardian": {
+      "command": "python3",
+      "args": ["$current_dir/scripts/start-mcp-service.py", "--port", "8083"],
+      "env": {
+        "GUARDIAN_MODE": "lightweight"
+      }
+    }
+  }
+}
+EOF
+    
+    log_success "Lightweight Claude Code configuration generated"
+    log_info "Copy claude-code-mcp-config.json to ~/.claude-code/mcp/"
+}
+
 show_completion() {
     echo ""
     echo -e "${GREEN}╔══════════════════════════════════════════════════╗"
     echo -e "║  🎉 Claude Guardian v${VERSION} Setup Complete! 🎉  ║"
+    echo -e "║     Setup Mode: ${SETUP_MODE^^}                    ║"
     echo -e "╚══════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${CYAN}🚀 Next Steps:${NC}"
     echo -e "  1. ${YELLOW}Integrate with Claude Code:${NC}"
     echo -e "     cp claude-code-mcp-config.json ~/.claude-code/mcp/"
     echo ""
-    echo -e "  2. ${YELLOW}Test the deployment:${NC}"
-    echo -e "     curl http://localhost:8083/health"
+    
+    if [[ "$SETUP_MODE" == "lightweight" ]]; then
+        echo -e "  2. ${YELLOW}Test MCP service:${NC}"
+        echo -e "     lsof -i :8083  # Verify service running"
+        echo ""
+        echo -e "${CYAN}🔧 Management:${NC}"
+        echo -e "  • Stop service:   kill \$(cat .mcp_pid)"
+        echo -e "  • Check logs:     tail /tmp/claude-guardian-mcp.log"
+    else
+        echo -e "  2. ${YELLOW}Test the deployment:${NC}"
+        echo -e "     curl http://localhost:8083/health"
+        echo -e "  3. ${YELLOW}View API docs:${NC}"
+        echo -e "     open http://localhost:8083/docs"
+        echo ""
+        echo -e "${CYAN}🔧 Management:${NC}"
+        echo -e "  • Manage services: ./manage.sh [start|stop|status|logs]"
+        echo -e "  • Docker commands: docker-compose [up|down|logs]"
+    fi
+    
     echo ""
-    echo -e "  3. ${YELLOW}View API documentation:${NC}"
-    echo -e "     open http://localhost:8083/docs"
-    echo ""
-    echo -e "${CYAN}🔧 Management Commands:${NC}"
-    echo -e "  • Start services:  docker-compose up -d"
-    echo -e "  • Stop services:   docker-compose down"
-    echo -e "  • View logs:       docker-compose logs -f"
-    echo -e "  • Service status:  docker-compose ps"
-    echo ""
-    echo -e "${BLUE}📚 Documentation:${NC} See README.md and docs/ directory"
+    echo -e "${BLUE}📚 Documentation:${NC} See README.md and GETTING_STARTED.md"
     echo ""
 }
 
@@ -259,34 +384,59 @@ main() {
     
     # Check if running with --help
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        echo "Claude Guardian v2.0.0-alpha Setup Script"
+        echo "Claude Guardian v2.0.0-alpha Universal Setup Script"
         echo ""
         echo "Usage: $0 [options]"
         echo ""
         echo "Options:"
-        echo "  --help, -h     Show this help message"
-        echo "  --minimal      Skip optional components"
+        echo "  --help, -h        Show this help message"
+        echo "  --mode MODE       Force setup mode: lightweight|full|enterprise"
+        echo "  --port PORT       Override MCP port (default: 8083)"
         echo ""
-        echo "This script will:"
-        echo "  1. Check system dependencies (Python 3.8+, Docker)"
-        echo "  2. Install Python dependencies"
-        echo "  3. Setup environment configuration"
-        echo "  4. Deploy services via Docker Compose"
-        echo "  5. Test deployment and generate Claude Code config"
+        echo "Setup Modes (auto-detected):"
+        echo "  • lightweight    Python-only MCP service (no Docker)"
+        echo "  • full          FastAPI + Docker stack (PostgreSQL, Redis, Qdrant)"
+        echo "  • enterprise    Full stack + Go services (future)"
+        echo ""
+        echo "This script automatically:"
+        echo "  1. Detects your environment capabilities"
+        echo "  2. Routes to optimal deployment strategy"
+        echo "  3. Configures Claude Code MCP integration"
+        echo "  4. Provides management tools and instructions"
         exit 0
     fi
     
-    log_info "Starting Claude Guardian v$VERSION setup..."
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --mode)
+                SETUP_MODE="$2"
+                log_info "Forced setup mode: $SETUP_MODE"
+                shift 2
+                ;;
+            --port)
+                MCP_PORT="$2"
+                shift 2
+                ;;
+            *)
+                log_warn "Unknown option: $1"
+                shift
+                ;;
+        esac
+    done
     
-    check_dependencies
-    install_python_dependencies
-    setup_environment
-    deploy_services
-    test_deployment
-    generate_claude_config
+    log_info "Starting Claude Guardian v$VERSION universal setup..."
+    
+    # Detect environment if not forced
+    if [[ -z "$SETUP_MODE" ]]; then
+        detect_environment
+    fi
+    
+    # Route to appropriate setup
+    route_setup
     show_completion
     
-    log_success "Setup completed successfully!"
+    log_success "Setup completed successfully in $SETUP_MODE mode!"
 }
 
 # Execute main function

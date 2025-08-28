@@ -92,11 +92,12 @@
 git clone https://github.com/RobLe3/claude_guardian.git
 cd claude_guardian
 
-# Run v2.0 setup script
-./setup-v2.sh
+# Universal setup with intelligent routing
+./setup.sh
 
-# Or manual Docker deployment
-docker compose up -d
+# Manage services after setup
+./manage.sh status  # Check service health
+./manage.sh logs    # View service logs
 ```
 
 ### **Claude Code Integration**
