@@ -1,7 +1,0 @@
-{
-  "vectors": { "size": 1536, "distance": "Cosine" },
-  "hnsw_config": { "m": 32, "ef_construct": 128 },
-  "optimizers_config": { "default_segment_number": 2 },
-  "quantization_config": { "scalar": { "type": "int8", "always_ram": true } },
-  "on_disk_payload": false
-}
