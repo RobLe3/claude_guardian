@@ -171,6 +171,9 @@ pkg/
 *.local
 .local/
 
+# Legacy artifacts directory (development artifacts, benchmarks, deprecated scripts)
+legacy-artifacts/
+
 # Development archives (organized historical code)
 # These directories contain preserved code for reference
 # but are not part of active v2.0.0-alpha codebase

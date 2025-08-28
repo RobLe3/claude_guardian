@@ -1,14 +1,33 @@
 # Claude Code Integration Guide
 
-**Claude Guardian v2.0.0-alpha** - Integration guide for WebSocket-based MCP connection with Claude Code.
+**Claude Guardian v2.0.0-alpha** - Complete integration guide for HTTP/WebSocket-based MCP connection with Claude Code.
+
+**🚀 5-Minute Setup | No Docker Required | Works with Fresh Claude Code**
 
 ---
 
 ## 🔗 **Quick Integration (2 minutes)**
 
 ### **Step 1: Start Claude Guardian v2.0**
+
+#### **Option A: Easy Setup (Recommended)**
 ```bash
-# Use the setup script (recommended)
+# Clone and quick setup
+git clone https://github.com/RobLe3/claude_guardian.git
+cd claude_guardian
+./easy-setup.sh
+
+# Expected output:
+# ✅ Python 3.11.5 found
+# 📦 Installing Python dependencies...
+# 🚀 Starting Claude Guardian MCP service...
+# ✅ MCP service running (PID: 12345)
+# 🎉 Setup Complete!
+```
+
+#### **Option B: Full Production Setup**
+```bash
+# Use the setup script (for full stack)
 ./setup-v2.sh
 
 # Expected output:
@@ -23,16 +42,26 @@
 # python3 -m uvicorn src.claude_guardian.main:app --host 0.0.0.0 --port 8000
 ```
 
-### **Step 2: Configure Claude Code MCP Integration**
-
-**Use the generated configuration file:**
-
+#### **Option C: Manual Dependencies Setup**
 ```bash
-# Copy the generated config
-cp claude-code-mcp-config.json ~/.claude-code/mcp/
+# Install minimal dependencies
+pip3 install --user websockets fastapi uvicorn pydantic
+
+# Start MCP service
+python3 scripts/start-mcp-service.py --port 8083
 ```
 
-**Or manually add to your Claude Code MCP configuration:**
+### **Step 2: Configure Claude Code MCP Integration**
+
+**Method 1: Use Generated Configuration (Easy Setup)**
+After running easy-setup.sh, use the generated configuration:
+```bash
+# Copy the generated config
+cp claude-code-config.json ~/.claude-code/mcp/
+```
+
+**Method 2: Manual Configuration (Custom Setup)**
+Add to your Claude Code MCP configuration:
 
 ```json
 {
@@ -254,7 +283,137 @@ Detection powered by: LightRAG + 25 threat patterns + ML analysis
 
 ---
 
+## 🛠️ **Alternative Configuration Methods**
+
+### **Method 1: Direct Script Execution**
+```json
+{
+  "name": "claude-guardian",
+  "command": "python3",
+  "args": ["/full/path/to/claude_guardian/scripts/start-mcp-service.py", "--port", "8083"],
+  "env": {
+    "GUARDIAN_MODE": "production",
+    "SECURITY_LEVEL": "moderate"
+  }
+}
+```
+
+### **Method 2: Using Management Script**
+```json
+{
+  "name": "claude-guardian", 
+  "command": "/full/path/to/claude_guardian/scripts/guardian-mcp",
+  "args": ["start", "8083"],
+  "env": {
+    "GUARDIAN_VERSION": "2.0.0-alpha"
+  }
+}
+```
+
+### **Method 3: WebSocket Connection**
+```json
+{
+  "name": "claude-guardian",
+  "command": "python3",
+  "args": ["/full/path/to/claude_guardian/scripts/start-mcp-service.py", "--port", "8083", "--persistent"],
+  "env": {
+    "GUARDIAN_HOST": "localhost",
+    "GUARDIAN_PORT": "8083"
+  }
+}
+```
+
+---
+
+## ⚙️ **Configuration Options**
+
+### **Security Levels**
+- `strict`: Maximum security detection
+- `moderate`: Balanced detection (default)
+- `relaxed`: Minimal false positives
+
+### **Environment Variables**
+```bash
+export GUARDIAN_MODE=production
+export SECURITY_LEVEL=moderate
+export MCP_PORT=8083
+export GUARDIAN_DEBUG=false
+```
+
+### **Performance Tuning**
+```bash
+# For large codebases
+export GUARDIAN_CACHE_SIZE=10000
+export GUARDIAN_TIMEOUT=30
+
+# For faster responses
+export GUARDIAN_ASYNC_MODE=true
+export GUARDIAN_PARALLEL_SCAN=true
+```
+
+---
+
+## 🔄 **Service Management**
+
+### **Start/Stop Service**
+```bash
+# Start
+python3 scripts/start-mcp-service.py --port 8083
+
+# Stop (find and kill process)
+lsof -ti :8083 | xargs kill
+
+# Status check
+lsof -i :8083 && echo "Running" || echo "Stopped"
+
+# Using management script
+scripts/guardian-mcp start
+scripts/guardian-mcp stop
+scripts/guardian-mcp status
+scripts/guardian-mcp restart
+```
+
+### **Automatic Startup**
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+alias guardian-start="cd /path/to/claude_guardian && python3 scripts/start-mcp-service.py --port 8083 &"
+```
+
+---
+
 ## 🚨 **Troubleshooting**
+
+### **MCP Service Won't Start**
+```bash
+# Check Python dependencies
+pip3 install websockets fastapi uvicorn pydantic
+
+# Check port conflicts
+lsof -i :8083
+# Kill conflicting process if needed
+
+# Start with debugging
+python3 scripts/start-mcp-service.py --port 8083 --debug
+```
+
+### **Claude Code Can't Connect**
+```bash
+# Verify service is running
+curl http://localhost:8083/health
+# Should return: {"status": "healthy"}
+
+# Check configuration path
+# Ensure full absolute paths in Claude Code config
+```
+
+### **Tools Not Available in Claude Code**
+```bash
+# Test MCP tools directly
+python3 scripts/validate-mcp-tools.py
+
+# Check Claude Code MCP settings
+# Restart Claude Code after config changes
+```
 
 ### **Claude Code can't find MCP server**
 
@@ -366,6 +525,44 @@ docker-compose -f docker-compose.production.yml up -d
 # Connect MCP service to production backend
 python3 scripts/start-mcp-service.py --port 8083 --production
 ```
+
+---
+
+## 🎯 **Usage in Claude Code**
+
+### **Security Scanning**
+```
+User: "Scan this code for security issues"
+Claude: [Uses Guardian to detect vulnerabilities, provides detailed analysis]
+```
+
+### **Pattern Analysis**
+```
+User: "Check if this function has any security anti-patterns"
+Claude: [Uses Guardian to analyze code patterns and security risks]
+```
+
+### **Risk Assessment**
+```
+User: "What's the security risk level of this API endpoint?"
+Claude: [Uses Guardian to assess and score security risks]
+```
+
+### **Report Generation**
+```
+User: "Generate a security report for this project"
+Claude: [Uses Guardian to create comprehensive security assessment]
+```
+
+## 🎉 **Success Indicators**
+
+When everything works correctly, you should see:
+
+1. **MCP Service**: Running on port 8083
+2. **Claude Code**: Shows "claude-guardian" in MCP servers list
+3. **Tools Available**: 5 security tools accessible in Claude
+4. **Validation**: `validate-mcp-tools.py` shows all green checkmarks
+5. **Functionality**: Security scans work in Claude Code conversations
 
 ---
 

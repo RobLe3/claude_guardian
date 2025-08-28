@@ -1,4 +1,7 @@
-# 🏗️ Claude Guardian Architecture
+# 🏗️ Claude Guardian Architecture & Project Structure
+
+**Version:** v2.0.0-alpha (FastAPI Enterprise Platform)  
+**Date:** August 28, 2025
 
 ## System Overview
 
@@ -193,6 +196,113 @@ Features that could be implemented:
 - Multi-tenant architecture with role-based access
 - Real-time collaborative security analysis
 - Integration with external security tools and APIs
+
+---
+
+## 📁 Project Structure
+
+### **Current FastAPI Implementation**
+
+```
+claude_guardian/
+├── README.md                           📄 Main project documentation
+├── GETTING_STARTED.md                  🚀 Comprehensive setup guide  
+├── CLAUDE_CODE_INTEGRATION.md          🔗 Claude Code integration guide
+├── ARCHITECTURE.md                     🏗️ This file - system architecture
+├── API.md                             📡 API documentation
+├── CHANGELOG.md                       📝 Version history
+│
+├── 📁 src/                            💻 Source code
+│   └── claude_guardian/               🛡️ Main application package
+│       ├── main.py                    🚀 FastAPI application entry point
+│       ├── core/                      🧠 Core functionality
+│       │   ├── security.py            🔒 Pattern-based security scanner
+│       │   └── database.py            💾 Database integration layer
+│       └── api/                       📡 API endpoints
+│           └── mcp.py                 🔧 MCP WebSocket integration
+│
+├── 📁 config/                         ⚙️ Configuration files
+│   ├── security-tools-registry.json   🛡️ Security tools definitions
+│   └── .env.template                  ⚙️ Environment configuration
+│
+├── 📁 scripts/                        🔧 Utility scripts
+│   ├── start-mcp-service.py           🚀 MCP server startup
+│   ├── validate-mcp-tools.py          ✅ MCP tool validation
+│   ├── guardian-mcp                   🔧 Service management script
+│   └── version.py                     📋 Version information
+│
+├── 📁 deployments/                    🚀 Deployment configurations
+│   └── production/                    🏭 Production deployment
+│       ├── README.md                  📖 Production setup guide
+│       ├── docker-compose.production.yml 🐳 Production stack
+│       ├── .env.template              ⚙️ Production environment
+│       └── init/                      🔧 Database initialization
+│
+├── 📁 docs/                          📚 User documentation
+│   └── README.md                      📖 Documentation index
+│
+├── 📁 tests/                         🧪 Test suites
+│   └── mcp-integration/               🔧 MCP-specific tests
+│
+└── 📁 dev-archives/                  📋 Development artifacts
+    ├── documentation/                 📝 Archived documentation
+    ├── benchmarks/                    📊 Performance benchmarks
+    └── duplicate-clone-analysis/      🔍 Repository analysis
+```
+
+### **Key Components**
+
+| Component | Location | Purpose | Status |
+|---|---|---|---|
+| **FastAPI App** | `src/claude_guardian/main.py` | Main application server | ✅ Active |
+| **Security Scanner** | `src/claude_guardian/core/security.py` | Pattern-based threat detection | ✅ Active |
+| **Database Manager** | `src/claude_guardian/core/database.py` | PostgreSQL, Redis, Qdrant integration | ✅ Active |
+| **MCP Integration** | `src/claude_guardian/api/mcp.py` | Claude Code WebSocket API | ✅ Active |
+| **Service Management** | `scripts/guardian-mcp` | Start/stop/status management | ✅ Active |
+| **Setup Automation** | `easy-setup.sh`, `setup-v2.sh` | Automated installation | ✅ Active |
+
+### **Configuration Management**
+
+```
+Configuration Hierarchy:
+├── .env.template                      🔧 Base environment configuration
+├── config/security-tools-registry.json 🛡️ Security tool definitions
+├── deployments/production/.env.template 🏭 Production overrides
+└── Runtime Environment Variables       ⚙️ Runtime configuration
+```
+
+### **Database Schema (Actual Implementation)**
+
+```sql
+-- PostgreSQL Tables (Active)
+CREATE TABLE audit_logs (
+    id SERIAL PRIMARY KEY,
+    scan_id UUID,
+    timestamp TIMESTAMP,
+    code_content TEXT,
+    threat_level VARCHAR(20),
+    findings JSONB
+);
+
+CREATE TABLE scan_results (
+    id SERIAL PRIMARY KEY,
+    session_id UUID,
+    scan_timestamp TIMESTAMP,
+    security_issues JSONB,
+    risk_score DECIMAL
+);
+
+-- Redis Keys (Active)
+sessions:*           # Session data and temporary storage
+cache:*              # Analysis results caching
+temp:*               # Temporary processing data
+
+-- Qdrant Collections (Configured, minimal usage)
+security_procedures  # Security best practices
+vulnerability_db     # Vulnerability data  
+attack_signatures    # Attack patterns
+threat_patterns      # Threat signatures
+```
 
 ---
 

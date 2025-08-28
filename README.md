@@ -79,9 +79,11 @@
 
 ## 🏃 **Quick Start**
 
-**⚡ 5-Minute Setup:** See [QUICKSTART.md](QUICKSTART.md) for complete installation guide.
-**🔗 Claude Code:** See [CLAUDE_CODE_INTEGRATION.md](CLAUDE_CODE_INTEGRATION.md) for MCP setup.
+**⚡ 5-Minute Setup:** See [GETTING_STARTED.md](GETTING_STARTED.md) for comprehensive installation guide.
+**🔗 Claude Code:** See [CLAUDE_CODE_INTEGRATION.md](CLAUDE_CODE_INTEGRATION.md) for complete MCP integration.
 **📋 API Documentation:** See [API.md](API.md) for complete API reference and endpoints.
+**🏗️ Architecture:** See [ARCHITECTURE.md](ARCHITECTURE.md) for system design and project structure.
+**📊 Performance:** See [PERFORMANCE_BENCHMARKS.md](PERFORMANCE_BENCHMARKS.md) for measured performance data.
 
 ### **One-Command Setup**
 
@@ -357,7 +359,7 @@ Copyright (c) 2025 Claude Guardian Team
 
 **🛡️ Protect Your Code. Secure Your Future. 🛡️**
 
-**[Local Documentation](docs/)** • **[Issues](../../issues)** • **[Source Code](./)**
+**[Getting Started](GETTING_STARTED.md)** • **[Architecture](ARCHITECTURE.md)** • **[Performance](PERFORMANCE_BENCHMARKS.md)** • **[Issues](../../issues)**
 
 [![Development Status](https://img.shields.io/badge/Status-Development-yellow.svg)](#-current-status-development)
 [![Basic Patterns](https://img.shields.io/badge/Detection-Basic%20Patterns-orange.svg)](#-current-functionality)
