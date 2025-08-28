@@ -142,7 +142,7 @@ setup_lightweight() {
     log_info "Installing minimal Python dependencies..."
     pip3 install --user websockets fastapi uvicorn pydantic
     
-    # Create minimal environment
+    # Create minimal environment from template
     cat > .env << EOF
 # Claude Guardian Lightweight Configuration
 GUARDIAN_MODE=mcp_only
@@ -254,9 +254,9 @@ deploy_services() {
     if [ -f "deployments/production/docker-compose.production.yml" ]; then
         log_info "Using production deployment configuration..."
         docker-compose -f deployments/production/docker-compose.production.yml up -d
-    elif [ -f "docker-compose.yml" ]; then
+    elif [ -f "config/docker-compose/docker-compose.yml" ]; then
         log_info "Using standard deployment configuration..."
-        docker-compose up -d
+        docker-compose -f config/docker-compose/docker-compose.yml up -d
     else
         log_error "No Docker Compose configuration found"
         exit 1

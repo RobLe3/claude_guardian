@@ -1,0 +1,103 @@
+# =============================================================================
+# Project: Claude Guardian, local only
+# File: docker-compose.yml
+# Version: 1.3_local_desktop
+# Date: 2025-08-23
+# Author: Roble Mumin, with ChatGPT
+#
+# Purpose, run Claude Guardian locally, invoked from Claude Code via MCP Server
+# Scope, MCP Server, LightRAG, Qdrant, Postgres for audit and policies
+# Exposure, only MCP binds to 127.0.0.1, all other services are internal
+# Endpoints, MCP ws http at ws://127.0.0.1:8083, health at http://127.0.0.1:8083/health
+# Notes, no secrets in this file, use .env, volumes are persistent
+# Targets, policy decision p95 under 100 ms, stable top k retrieval
+# =============================================================================
+
+services:
+  qdrant:
+    image: qdrant/qdrant:1.11.0
+    container_name: cg-qdrant
+    restart: unless-stopped
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+      QDRANT__STORAGE__OPTIMIZERS__DEFAULT_SEGMENT_NUMBER: 2
+    expose:
+      - "6333"     # internal HTTP
+      - "6334"     # internal gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://localhost:6333/readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+
+  lightrag:
+    image: ghcr.io/yourorg/lightrag-api:latest
+    container_name: cg-lightrag
+    restart: unless-stopped
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+      - MAX_HOPS=1
+    expose:
+      - "8000"
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+
+  postgres:
+    image: postgres:17
+    container_name: cg-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - TZ=Europe/Vienna
+    expose:
+      - "5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./init/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+
+  mcp-server:  # Claude Guardian MCP endpoint, WebSocket at 8083
+    image: ghcr.io/yourorg/claude-guardian-mcp:latest
+    container_name: cg-mcp
+    restart: unless-stopped
+    environment:
+      - MCP_PORT=8083
+      - QDRANT_URL=http://qdrant:6333
+      - LIGHTRAG_URL=http://lightrag:8000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - JWT_SECRET=${JWT_SECRET}
+      - RBAC_PRESET=admin,user,observer
+      - POLICY_MODE=conservative
+      - TZ=Europe/Vienna
+    ports:
+      - "127.0.0.1:8083:8083"   # local only
+    depends_on:
+      lightrag:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://localhost:8083/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  qdrant_data: {}
+  pg_data: {}
+

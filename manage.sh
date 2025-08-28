@@ -69,7 +69,7 @@ show_usage() {
 detect_deployment_type() {
     if [[ -f ".mcp_pid" && -f ".env" ]] && grep -q "GUARDIAN_MODE=mcp_only" .env 2>/dev/null; then
         echo "lightweight"
-    elif [[ -f "docker-compose.yml" || -f "deployments/production/docker-compose.production.yml" ]]; then
+    elif [[ -f "config/docker-compose/docker-compose.yml" || -f "deployments/production/docker-compose.production.yml" ]]; then
         echo "docker"
     else
         echo "unknown"
@@ -107,7 +107,7 @@ service_start() {
             if [[ -f "deployments/production/docker-compose.production.yml" ]]; then
                 docker-compose -f deployments/production/docker-compose.production.yml up -d
             else
-                docker-compose up -d
+                docker-compose -f config/docker-compose/docker-compose.yml up -d
             fi
             log_success "Docker services started"
             ;;
@@ -143,7 +143,7 @@ service_stop() {
             if [[ -f "deployments/production/docker-compose.production.yml" ]]; then
                 docker-compose -f deployments/production/docker-compose.production.yml down
             else
-                docker-compose down
+                docker-compose -f config/docker-compose/docker-compose.yml down
             fi
             log_success "Docker services stopped"
             ;;
@@ -192,7 +192,7 @@ service_status() {
                 if [[ -f "deployments/production/docker-compose.production.yml" ]]; then
                     docker-compose -f deployments/production/docker-compose.production.yml ps
                 else
-                    docker-compose ps
+                    docker-compose -f config/docker-compose/docker-compose.yml ps
                 fi
             else
                 log_error "Docker Compose not available"
@@ -226,7 +226,7 @@ service_logs() {
                 if [[ -f "deployments/production/docker-compose.production.yml" ]]; then
                     docker-compose -f deployments/production/docker-compose.production.yml logs -f
                 else
-                    docker-compose logs -f
+                    docker-compose -f config/docker-compose/docker-compose.yml logs -f
                 fi
             fi
             ;;
@@ -283,7 +283,7 @@ cleanup_system() {
     local deployment_type=$(detect_deployment_type)
     if [[ "$deployment_type" == "docker" ]]; then
         log_info "Stopping and removing containers..."
-        docker-compose down --remove-orphans 2>/dev/null || true
+        docker-compose -f config/docker-compose/docker-compose.yml down --remove-orphans 2>/dev/null || true
         
         # Remove unused images
         log_info "Cleaning unused Docker images..."
@@ -320,7 +320,7 @@ health_check() {
             fi
             ;;
         "docker")
-            local containers_running=$(docker-compose ps -q | wc -l)
+            local containers_running=$(docker-compose -f config/docker-compose/docker-compose.yml ps -q | wc -l)
             if [[ $containers_running -gt 0 ]]; then
                 echo -e "${GREEN}✅ Docker Services:${NC} $containers_running containers running"
                 ((health_score++))

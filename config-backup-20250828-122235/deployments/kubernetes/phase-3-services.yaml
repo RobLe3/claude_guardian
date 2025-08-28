@@ -1,0 +1,719 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: claude-guardian-phase3
+  labels:
+    name: claude-guardian-phase3
+    app: claude-guardian
+    phase: "3"
+---
+# ConfigMap for Phase 3 configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: phase3-config
+  namespace: claude-guardian-phase3
+data:
+  ai_model_path: "/app/ai-models"
+  prediction_horizon: "24h"
+  threat_confidence_threshold: "0.85"
+  siem_sync_interval: "300s"
+  visualization_refresh_rate: "2s"
+  incident_response_timeout: "900s"
+  kafka_brokers: "kafka-cluster:9092"
+  neural_network_batch_size: "1000"
+---
+# AI Threat Hunter Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-threat-hunter
+  namespace: claude-guardian-phase3
+  labels:
+    app: ai-threat-hunter
+    tier: ai-intelligence
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ai-threat-hunter
+  template:
+    metadata:
+      labels:
+        app: ai-threat-hunter
+        tier: ai-intelligence
+    spec:
+      containers:
+      - name: ai-hunter
+        image: claude-guardian/ai-threat-hunter:latest
+        ports:
+        - containerPort: 8090
+        env:
+        - name: PORT
+          value: "8090"
+        - name: WEAVIATE_URL
+          value: "http://weaviate:8080"
+        - name: NEO4J_URL
+          value: "bolt://neo4j:7687"
+        - name: AI_MODEL_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: phase3-config
+              key: ai_model_path
+        - name: THREAT_CONFIDENCE_THRESHOLD
+          valueFrom:
+            configMapKeyRef:
+              name: phase3-config
+              key: threat_confidence_threshold
+        - name: NEURAL_NETWORK_BATCH_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: phase3-config
+              key: neural_network_batch_size
+        - name: WEAVIATE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: weaviate_api_key
+        - name: NEO4J_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: neo4j_password
+        volumeMounts:
+        - name: ai-model-storage
+          mountPath: /app/ai-models
+        - name: gpu-device
+          mountPath: /dev/nvidia0
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2000m"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+            nvidia.com/gpu: 2
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8090
+          initialDelaySeconds: 120
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8090
+          initialDelaySeconds: 60
+          periodSeconds: 15
+      volumes:
+      - name: ai-model-storage
+        persistentVolumeClaim:
+          claimName: ai-models-pvc
+      - name: gpu-device
+        hostPath:
+          path: /dev/nvidia0
+      nodeSelector:
+        accelerator: nvidia-tesla-v100
+---
+# AI Threat Hunter Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-threat-hunter
+  namespace: claude-guardian-phase3
+spec:
+  selector:
+    app: ai-threat-hunter
+  ports:
+  - port: 8090
+    targetPort: 8090
+---
+# Predictive Analytics Engine Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: predictive-analytics
+  namespace: claude-guardian-phase3
+  labels:
+    app: predictive-analytics
+    tier: analytics
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: predictive-analytics
+  template:
+    metadata:
+      labels:
+        app: predictive-analytics
+        tier: analytics
+    spec:
+      containers:
+      - name: analytics
+        image: claude-guardian/predictive-analytics:latest
+        ports:
+        - containerPort: 8091
+        env:
+        - name: PORT
+          value: "8091"
+        - name: TIMESERIES_DB_URL
+          value: "http://influxdb:8086"
+        - name: PREDICTION_HORIZON
+          valueFrom:
+            configMapKeyRef:
+              name: phase3-config
+              key: prediction_horizon
+        - name: INFLUXDB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: influxdb_token
+        - name: WEAVIATE_URL
+          value: "http://weaviate:8080"
+        - name: WEAVIATE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: weaviate_api_key
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8091
+          initialDelaySeconds: 90
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8091
+          initialDelaySeconds: 45
+          periodSeconds: 10
+---
+# Predictive Analytics Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: predictive-analytics
+  namespace: claude-guardian-phase3
+spec:
+  selector:
+    app: predictive-analytics
+  ports:
+  - port: 8091
+    targetPort: 8091
+---
+# SIEM Integration Gateway Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: siem-integration-gateway
+  namespace: claude-guardian-phase3
+  labels:
+    app: siem-integration-gateway
+    tier: integration
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: siem-integration-gateway
+  template:
+    metadata:
+      labels:
+        app: siem-integration-gateway
+        tier: integration
+    spec:
+      containers:
+      - name: gateway
+        image: claude-guardian/siem-integration-gateway:latest
+        ports:
+        - containerPort: 8092
+        env:
+        - name: PORT
+          value: "8092"
+        - name: KAFKA_BROKERS
+          valueFrom:
+            configMapKeyRef:
+              name: phase3-config
+              key: kafka_brokers
+        - name: SIEM_SYNC_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: phase3-config
+              key: siem_sync_interval
+        - name: DATABASE_URL
+          value: "postgres://iff_guardian:$(POSTGRESQL_PASSWORD)@postgresql:5432/iff_guardian?sslmode=disable"
+        - name: POSTGRESQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: postgresql_password
+        - name: SPLUNK_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: splunk_token
+        - name: QRADAR_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: qradar_api_key
+        - name: SENTINEL_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: sentinel_client_id
+        - name: SENTINEL_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: sentinel_client_secret
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8092
+          initialDelaySeconds: 60
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8092
+          initialDelaySeconds: 30
+          periodSeconds: 10
+---
+# SIEM Integration Gateway Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: siem-integration-gateway
+  namespace: claude-guardian-phase3
+spec:
+  selector:
+    app: siem-integration-gateway
+  ports:
+  - port: 8092
+    targetPort: 8092
+---
+# Advanced Visualization Engine Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: advanced-visualization
+  namespace: claude-guardian-phase3
+  labels:
+    app: advanced-visualization
+    tier: frontend
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: advanced-visualization
+  template:
+    metadata:
+      labels:
+        app: advanced-visualization
+        tier: frontend
+    spec:
+      containers:
+      - name: visualization
+        image: claude-guardian/advanced-visualization:latest
+        ports:
+        - containerPort: 8093
+        env:
+        - name: PORT
+          value: "8093"
+        - name: AI_HUNTER_URL
+          value: "http://ai-threat-hunter:8090"
+        - name: PREDICTIVE_ANALYTICS_URL
+          value: "http://predictive-analytics:8091"
+        - name: SIEM_GATEWAY_URL
+          value: "http://siem-integration-gateway:8092"
+        - name: DASHBOARD_SERVICE_URL
+          value: "http://real-time-dashboard:8086"
+        - name: VISUALIZATION_REFRESH_RATE
+          valueFrom:
+            configMapKeyRef:
+              name: phase3-config
+              key: visualization_refresh_rate
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8093
+          initialDelaySeconds: 45
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8093
+          initialDelaySeconds: 20
+          periodSeconds: 5
+---
+# Advanced Visualization Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: advanced-visualization
+  namespace: claude-guardian-phase3
+spec:
+  selector:
+    app: advanced-visualization
+  ports:
+  - port: 8093
+    targetPort: 8093
+  type: LoadBalancer
+---
+# Incident Response Orchestrator Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: incident-response-orchestrator
+  namespace: claude-guardian-phase3
+  labels:
+    app: incident-response-orchestrator
+    tier: automation
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: incident-response-orchestrator
+  template:
+    metadata:
+      labels:
+        app: incident-response-orchestrator
+        tier: automation
+    spec:
+      containers:
+      - name: orchestrator
+        image: claude-guardian/incident-response-orchestrator:latest
+        ports:
+        - containerPort: 8094
+        env:
+        - name: PORT
+          value: "8094"
+        - name: ALERT_SYSTEM_URL
+          value: "http://alert-system:8088"
+        - name: AI_HUNTER_URL
+          value: "http://ai-threat-hunter:8090"
+        - name: INCIDENT_RESPONSE_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: phase3-config
+              key: incident_response_timeout
+        - name: DATABASE_URL
+          value: "postgres://iff_guardian:$(POSTGRESQL_PASSWORD)@postgresql:5432/iff_guardian?sslmode=disable"
+        - name: POSTGRESQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: claude-guardian-secrets
+              key: postgresql_password
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8094
+          initialDelaySeconds: 45
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8094
+          initialDelaySeconds: 20
+          periodSeconds: 10
+---
+# Incident Response Orchestrator Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: incident-response-orchestrator
+  namespace: claude-guardian-phase3
+spec:
+  selector:
+    app: incident-response-orchestrator
+  ports:
+  - port: 8094
+    targetPort: 8094
+---
+# Persistent Volume Claim for AI Models
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-models-pvc
+  namespace: claude-guardian-phase3
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: fast-ssd
+---
+# Horizontal Pod Autoscaler for AI Threat Hunter
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-hunter-hpa
+  namespace: claude-guardian-phase3
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-threat-hunter
+  minReplicas: 3
+  maxReplicas: 12
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Resource
+    resource:
+      name: nvidia.com/gpu
+      target:
+        type: Utilization
+        averageUtilization: 85
+---
+# Horizontal Pod Autoscaler for SIEM Gateway
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: siem-gateway-hpa
+  namespace: claude-guardian-phase3
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: siem-integration-gateway
+  minReplicas: 3
+  maxReplicas: 15
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 75
+---
+# Horizontal Pod Autoscaler for Visualization Engine
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: visualization-hpa
+  namespace: claude-guardian-phase3
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: advanced-visualization
+  minReplicas: 4
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 65
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70
+---
+# Network Policy for Phase 3 Services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: phase3-network-policy
+  namespace: claude-guardian-phase3
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: claude-guardian
+    - namespaceSelector:
+        matchLabels:
+          name: claude-guardian-phase2
+    - namespaceSelector:
+        matchLabels:
+          name: claude-guardian-phase3
+    - podSelector: {}
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: claude-guardian
+    - namespaceSelector:
+        matchLabels:
+          name: claude-guardian-phase2
+    - namespaceSelector:
+        matchLabels:
+          name: claude-guardian-phase3
+    - podSelector: {}
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+---
+# Service Monitor for Prometheus (Phase 3)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: phase3-services-monitor
+  namespace: claude-guardian-phase3
+spec:
+  selector:
+    matchLabels:
+      app: ai-threat-hunter
+  endpoints:
+  - port: web
+    path: /metrics
+---
+# Ingress for Advanced Visualization
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: claude-guardian-visualization
+  namespace: claude-guardian-phase3
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/websocket-services: "advanced-visualization"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  tls:
+  - hosts:
+    - visualization.claude-guardian.local
+    secretName: visualization-tls-secret
+  rules:
+  - host: visualization.claude-guardian.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: advanced-visualization
+            port:
+              number: 8093
+---
+# GPU Node Pool Configuration (for cloud providers)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gpu-node-config
+  namespace: claude-guardian-phase3
+data:
+  node_selector: "accelerator=nvidia-tesla-v100"
+  gpu_count: "2"
+  memory_per_node: "32Gi"
+  cpu_per_node: "16"
+  storage_per_node: "500Gi"
+---
+# Kafka Integration Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-integration-config
+  namespace: claude-guardian-phase3
+data:
+  topics: |
+    iff-ai-threats
+    iff-predictions
+    iff-siem-events
+    iff-incident-response
+    iff-visualizations
+  partitions: "12"
+  replication_factor: "3"
+  retention_hours: "168"
+---
+# Resource Quota for Phase 3
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: phase3-resource-quota
+  namespace: claude-guardian-phase3
+spec:
+  hard:
+    requests.cpu: "50"
+    requests.memory: 100Gi
+    requests.nvidia.com/gpu: "10"
+    limits.cpu: "100"
+    limits.memory: 200Gi
+    limits.nvidia.com/gpu: "20"
+    persistentvolumeclaims: "20"
+    services: "20"
+    secrets: "50"
+    configmaps: "50"
+---
+# Limit Range for Phase 3 Containers
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: phase3-limit-range
+  namespace: claude-guardian-phase3
+spec:
+  limits:
+  - default:
+      cpu: 1000m
+      memory: 2Gi
+    defaultRequest:
+      cpu: 100m
+      memory: 256Mi
+    type: Container
+  - default:
+      storage: 10Gi
+    type: PersistentVolumeClaim

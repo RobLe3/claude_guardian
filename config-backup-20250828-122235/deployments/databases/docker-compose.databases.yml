@@ -4,14 +4,14 @@ services:
   # Vector Database - Weaviate for semantic search and ML
   weaviate:
     image: semitechnologies/weaviate:1.25.4
-    container_name: claude-guardian-weaviate
+    container_name: iff-weaviate
     restart: unless-stopped
     environment:
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'false'
       AUTHENTICATION_APIKEY_ENABLED: 'true'
       AUTHENTICATION_APIKEY_ALLOWED_KEYS: '${WEAVIATE_API_KEY}'
-      AUTHENTICATION_APIKEY_USERS: 'claude-guardian@admin'
+      AUTHENTICATION_APIKEY_USERS: 'iff-guardian@admin'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
       ENABLE_MODULES: 'text2vec-openai,generative-openai,qna-openai'
@@ -23,7 +23,7 @@ services:
     volumes:
       - weaviate_data:/var/lib/weaviate
     networks:
-      - claude-guardian-network
+      - iff-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
       interval: 30s
@@ -34,7 +34,7 @@ services:
   # Graph Database - Neo4j for relationship modeling
   neo4j:
     image: neo4j:5.15-enterprise
-    container_name: claude-guardian-neo4j
+    container_name: iff-neo4j
     restart: unless-stopped
     environment:
       NEO4J_AUTH: neo4j/${NEO4J_PASSWORD}
@@ -57,7 +57,7 @@ services:
       - neo4j_import:/var/lib/neo4j/import
       - neo4j_plugins:/plugins
     networks:
-      - claude-guardian-network
+      - iff-network
     healthcheck:
       test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "${NEO4J_PASSWORD}", "RETURN 1"]
       interval: 30s
@@ -68,13 +68,13 @@ services:
   # Time Series Database - InfluxDB for metrics and monitoring
   influxdb:
     image: influxdb:2.7-alpine
-    container_name: claude-guardian-influxdb
+    container_name: iff-influxdb
     restart: unless-stopped
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_USERNAME}
       DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD}
-      DOCKER_INFLUXDB_INIT_ORG: claude-guardian
+      DOCKER_INFLUXDB_INIT_ORG: iff-guardian
       DOCKER_INFLUXDB_INIT_BUCKET: security-metrics
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_ADMIN_TOKEN}
       INFLUXD_LOG_LEVEL: info
@@ -84,7 +84,7 @@ services:
       - influxdb_data:/var/lib/influxdb2
       - influxdb_config:/etc/influxdb2
     networks:
-      - claude-guardian-network
+      - iff-network
     healthcheck:
       test: ["CMD", "influx", "ping"]
       interval: 30s
@@ -95,12 +95,12 @@ services:
   # Document Store - MongoDB for flexible schemas
   mongodb:
     image: mongo:7.0
-    container_name: claude-guardian-mongodb
+    container_name: iff-mongodb
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
-      MONGO_INITDB_DATABASE: claude_guardian
+      MONGO_INITDB_DATABASE: iff_guardian
     ports:
       - '27017:27017'
     volumes:
@@ -108,7 +108,7 @@ services:
       - mongodb_config:/data/configdb
       - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
-      - claude-guardian-network
+      - iff-network
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s
@@ -119,11 +119,11 @@ services:
   # Search Engine - Elasticsearch for log analysis
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: claude-guardian-elasticsearch
+    container_name: iff-elasticsearch
     restart: unless-stopped
     environment:
-      node.name: claude-guardian-es-node
-      cluster.name: claude-guardian-cluster
+      node.name: iff-es-node
+      cluster.name: iff-guardian-cluster
       discovery.type: single-node
       bootstrap.memory_lock: 'true'
       xpack.security.enabled: 'true'
@@ -141,7 +141,7 @@ services:
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
-      - claude-guardian-network
+      - iff-network
     healthcheck:
       test: ["CMD-SHELL", "curl -u elastic:${ELASTICSEARCH_PASSWORD} -s -f http://localhost:9200/_cluster/health"]
       interval: 30s
@@ -152,7 +152,7 @@ services:
   # Redis Cluster for caching and session management
   redis-master:
     image: redis:7.2-alpine
-    container_name: claude-guardian-redis-master
+    container_name: iff-redis-master
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 1gb --maxmemory-policy allkeys-lru
     ports:
@@ -160,7 +160,7 @@ services:
     volumes:
       - redis_master_data:/data
     networks:
-      - claude-guardian-network
+      - iff-network
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 30s
@@ -169,7 +169,7 @@ services:
 
   redis-replica:
     image: redis:7.2-alpine
-    container_name: claude-guardian-redis-replica
+    container_name: iff-redis-replica
     restart: unless-stopped
     command: redis-server --replicaof redis-master 6379 --requirepass ${REDIS_PASSWORD} --masterauth ${REDIS_PASSWORD}
     ports:
@@ -177,7 +177,7 @@ services:
     volumes:
       - redis_replica_data:/data
     networks:
-      - claude-guardian-network
+      - iff-network
     depends_on:
       - redis-master
     healthcheck:
@@ -189,10 +189,10 @@ services:
   # PostgreSQL for relational data
   postgresql:
     image: postgres:16-alpine
-    container_name: claude-guardian-postgresql
+    container_name: iff-postgresql
     restart: unless-stopped
     environment:
-      POSTGRES_DB: claude_guardian
+      POSTGRES_DB: iff_guardian
       POSTGRES_USER: ${POSTGRESQL_USER}
       POSTGRES_PASSWORD: ${POSTGRESQL_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
@@ -202,9 +202,9 @@ services:
       - postgresql_data:/var/lib/postgresql/data
       - ./init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql:ro
     networks:
-      - claude-guardian-network
+      - iff-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRESQL_USER} -d claude_guardian"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRESQL_USER} -d iff_guardian"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -238,7 +238,7 @@ volumes:
     driver: local
 
 networks:
-  claude-guardian-network:
+  iff-network:
     driver: bridge
     ipam:
       config:
